@@ -1,0 +1,66 @@
+---
+appenders:
+  screen:
+    out: stderr
+    format: line
+  file-err:
+    class: file
+    out: ./error.txt
+    format: line
+  file-warn:
+    class: file
+    out: ./warn.txt
+    format: line
+  file-info:
+    class: file
+    out: ./info.txt
+    format: line
+  file-debug:
+    class: file
+    out: ./debug.txt
+    format: line
+#    %d Current date in yyyy.MM.dd hh:mm:ss format
+#    %d{...} Current date in customized format
+#    %l Level of the message to be logged
+#    %s Sublevel of the message to be logged
+#    %n New line
+#    %m Stringified message to be logged
+#    %m{} Key value(s) of message to be logged
+#    %M{} Excluded key value(s) of message to be logged
+#    %L Line number within the file where the log statement was issued
+#    %C{} Module/Class name or its part from end where the logging request was issued
+#    %S subroutine where the logging request was issued
+#    %P pid of the current process
+#    %r Number of milliseconds elapsed from program start to logging 
+#       event
+#    %R Number of milliseconds elapsed from last logging event to
+#       current logging event 
+#    %T A stack trace of functions called
+#    %x The topmost context name
+#    %G{} Value of the key from global stash
+#    %% A literal percent (%) sign
+formats:
+  line:
+    format: "%d [%P][%l.%s][%C{1}::%S(%L)]: %m%n"
+    stringify: dumpAll
+    class: pattern
+route:
+  default:
+    error: [file-err, screen]
+    debug: file-debug
+    info: file-info
+    warning: [file-warn, screen]
+    critical: [file-err, screen]
+    fatal: [file-err, screen]
+    deadly: [file-err, screen]
+  context:
+    "test debug off":
+      debug: off
+    "test sublevel":
+      debug:
+        input: off
+        result: screen
+  subroutine:
+    test_subroutine:
+      info: screen
+      
