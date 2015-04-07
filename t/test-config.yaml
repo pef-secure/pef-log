@@ -19,7 +19,7 @@ appenders:
     class: file
     out: ./debug.txt
     format: line
-#    %d Current date in yyyy.MM.dd hh:mm:ss format
+#    %d Current date in %y.%m.%d %H:%M:%S format
 #    %d{...} Current date in customized format
 #    %l Level of the message to be logged
 #    %s Sublevel of the message to be logged

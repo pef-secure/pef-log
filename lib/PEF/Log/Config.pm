@@ -109,7 +109,7 @@ sub _reload_formats {
 }
 
 sub reload {
-	my ($self, $params);
+	my ($self, $params) = @_;
 	$params ||= \%config_opts;
 	my $reload = 0;
 	if (exists $params->{file}) {
