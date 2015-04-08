@@ -2,6 +2,7 @@ package PEF::Log::Format::Pattern;
 use POSIX qw(strftime);
 use Data::Dumper;
 use Time::HiRes qw(time);
+use Carp;
 
 use strict;
 use warnings;
@@ -38,13 +39,22 @@ sub _quote_sep {
 #    %% A literal percent (%) sign
 
 sub new {
-	bless \my $a, $_[0];
+	my ($class, %params) = @_;
+	my $stringify = $params{stringify} || "PEF::Log::Stringify::DumpAll";
+	eval "require $stringify";
+	if ($@) {
+		$stringify = "PEF::Log::Stringify::" . ucfirst ($stringify);
+		eval "require $stringify";
+	}
+	croak "error loading stringify module: $stringify" if $@;
+	my $format = $params{format} || "%d %m%n";
+	bless {stringify => $stringify, format => $format}, $_[0];
 }
 
 sub build_formatter {
-	my ($format, $stringify) = @_;
-	$stringify //= "PEF::Log::Stringify::DumpAll";
-	eval "require $stringify";
+	my $self       = $_[0];
+	my $format     = $self->{stringify};
+	my $stringify  = $self->{format};
 	my %info_parts = (
 		d => sub {
 			my ($params) = @_;
@@ -265,7 +275,11 @@ IP
 		sprintf $sprf, $spra;
 	}
 FMT
-	eval $formatter;
+}
+
+sub formatter {
+	my $self = $_[0];
+	eval $self->build_formatter;
 }
 
 1;

@@ -15,19 +15,6 @@ our @EXPORT = qw(
   deadly
 );
 
-our %_to_int = (
-	debug    => 5,
-	info     => 4,
-	warning  => 3,
-	warn     => 3,
-	error    => 2,
-	critical => 1,
-	fatal    => 1,
-	deadly   => 0
-);
-
-our @_to_name = qw(deadly critical error warning info debug);
-
 our @sublevels;
 
 sub import {
@@ -45,10 +32,9 @@ sub import {
 		if (!$sldone) {
 			for my $sl (@sublevels) {
 				for my $l (@EXPORT) {
-					my $il = $_to_int{$l};
 					eval <<SL;
 	sub ${l}::${sl} (&\@) {
-		bless \$_[0], "PEF::Log::Levels::${il}::$sl"; 
+		bless \$_[0], "PEF::Log::Levels::${l}::$sl"; 
 		\@_ 
 	}
 SL
@@ -61,12 +47,12 @@ SL
 	$class->export_to_level(2, $class, keys %imps);
 }
 
-sub debug (&@)    { bless $_[0], "PEF::Log::Levels::5"; @_ }
-sub info (&@)     { bless $_[0], "PEF::Log::Levels::4"; @_ }
-sub warning (&@)  { bless $_[0], "PEF::Log::Levels::3"; @_ }
-sub error (&@)    { bless $_[0], "PEF::Log::Levels::2"; @_ }
-sub critical (&@) { bless $_[0], "PEF::Log::Levels::1"; @_ }
-sub fatal (&@)    { bless $_[0], "PEF::Log::Levels::1"; @_ }
-sub deadly (&@)   { bless $_[0], "PEF::Log::Levels::0"; @_ }
+sub debug (&@)    { bless $_[0], "PEF::Log::Levels::debug";    @_ }
+sub info (&@)     { bless $_[0], "PEF::Log::Levels::info";     @_ }
+sub warning (&@)  { bless $_[0], "PEF::Log::Levels::warning";  @_ }
+sub error (&@)    { bless $_[0], "PEF::Log::Levels::error";    @_ }
+sub critical (&@) { bless $_[0], "PEF::Log::Levels::critical"; @_ }
+sub fatal (&@)    { bless $_[0], "PEF::Log::Levels::fatal";    @_ }
+sub deadly (&@)   { bless $_[0], "PEF::Log::Levels::deadly";   @_ }
 
 1;

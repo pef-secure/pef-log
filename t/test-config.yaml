@@ -44,12 +44,12 @@ formats:
     format: "%d [%P][%l.%s][%C{1}::%S(%L)]: %m%n"
     stringify: dumpAll
     class: pattern
-route:
+routes:
   default:
-    error: [file-err, screen]
     debug: file-debug
     info: file-info
     warning: [file-warn, screen]
+    error: [file-err, screen]
     critical: [file-err, screen]
     fatal: [file-err, screen]
     deadly: [file-err, screen]

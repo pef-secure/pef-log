@@ -4,7 +4,6 @@ use warnings;
 use YAML::XS qw(LoadFile Load);
 use Carp;
 use Scalar::Util qw(blessed);
-use PEF::Log::Levels ();
 
 our @reload_watchers;
 our %config_opts;
@@ -76,36 +75,42 @@ sub _reload_formats {
 		delete $config{formats}{$fmt} if !exists $config_formats{$fmt};
 	}
 	for my $fmt (keys %config_formats) {
-		if (exists ($config{formats}{$fmt})) {
-			if ($config{formats}{$fmt}->can("reload")) {
-				$config{formats}{$fmt}->reload($config_formats{$fmt});
-			}
+		my $fmtpc = $config_formats{$fmt};
+		my $conf;
+		if ('HASH' eq ref $fmtpc) {
+			$conf = $fmtpc;
 		} else {
-			my $fmtpc = $config_formats{$fmt};
-			my $conf;
-			if ('HASH' eq ref $fmtpc) {
-				$conf = $fmtpc;
-			} else {
-				$conf = {};
-			}
-			my $name;
-			if (%$conf && exists $conf->{class}) {
-				$name = $conf->{class};
-			} else {
-				$name = "PEF::Log::Format::" . ucfirst $fmt;
-			}
-			eval "require $name";
-			if ($@ and index ("::", $name) == -1) {
-				$name = "PEF::Log::Format::" . ucfirst $name;
-				eval "require $name";
-			}
-			if ($@) {
-				carp "loading format $fmt: $@";
-				next;
-			}
-			$config{formats}{$fmt} = "$name"->new(%$conf);
+			$conf = {};
 		}
+		my $name;
+		if (%$conf && exists $conf->{class}) {
+			$name = $conf->{class};
+		} else {
+			$name = "PEF::Log::Format::" . ucfirst $fmt;
+		}
+		eval "require $name";
+		if ($@ and index ("::", $name) == -1) {
+			$name = "PEF::Log::Format::" . ucfirst $name;
+			eval "require $name";
+		}
+		if ($@) {
+			carp "loading format $fmt: $@";
+			next;
+		}
+		$config{formats}{$fmt} = "$name"->new(%$conf)->formatter;
 	}
+}
+
+sub _reload_routes {
+	my %config_routes;
+	if (exists $config{file}{routes}) {
+		%config_routes = %{$config{file}{routes}};
+	}
+	if (exists $config{text}{routes}) {
+		my @keys = keys %{$config{text}{routes}};
+		@config_routes{@keys} = values %{$config{file}{routes}};
+	}
+	$config{routes} = \%config_routes;
 }
 
 sub reload {
@@ -126,8 +131,8 @@ sub reload {
 			croak "No such file: $params->{file}";
 		}
 	}
-	if (exists $params->{config}) {
-		my ($cont) = eval { Load $params->{config} };
+	if (exists $params->{plain_config}) {
+		my ($cont) = eval { Load $params->{plain_config} };
 		croak $@ if $@;
 		$config{text} = $cont;
 		$reload = 1;
@@ -135,15 +140,17 @@ sub reload {
 	if ($reload) {
 		_reload_formats();
 		_reload_appenders();
+		_reload_routes();
 	}
 }
 
 sub new {
 	my ($class, %params) = @_;
+	croak "no config" unless exists $params{file} or exists $params{plain_config};
 	$config_instance = bless {}, $class;
 	%config_opts = %params;
 	$config_instance->reload;
-	delete $config_opts{config};
+	delete $config_opts{plain_config};
 	$config_instance;
 }
 
