@@ -7,12 +7,7 @@ use Scalar::Util qw(blessed);
 
 our @reload_watchers;
 our %config;
-our $config_instance;
 our $file_mtime = 0;
-
-sub instance {
-	$config_instance;
-}
 
 sub _reload_appenders {
 	my %config_appenders;
@@ -114,7 +109,8 @@ sub _reload_routes {
 }
 
 sub reload {
-	my ($self, $params) = @_;
+	shift @_ if $_[0] eq __PACKAGE__;
+	my ($params) = @_;
 	my $reload = 0;
 	if (exists $params->{file}) {
 		my @bfs = stat $params->{file};
@@ -143,12 +139,11 @@ sub reload {
 	}
 }
 
-sub new {
-	my ($class, %params) = @_;
+sub init {
+	shift @_ if $_[0] eq __PACKAGE__;
+	my %params = @_;
 	croak "no config" unless exists $params{file} or exists $params{plain_config};
-	$config_instance = bless {}, $class;
-	$config_instance->reload(\%params);
-	$config_instance;
+	reload(\%params);
 }
 
 1;

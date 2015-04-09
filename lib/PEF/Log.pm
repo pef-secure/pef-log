@@ -51,13 +51,13 @@ sub import {
 }
 
 sub init {
-	my ($class, %params) = @_;
-	PEF::Log::Config->new(%params);
+	shift @_ if $_[0] eq __PACKAGE__;
+	PEF::Log::Config::init(@_);
 }
 
 sub reload {
-	my ($class, $params) = @_;
-	PEF::Log::Config->reload($params);
+	shift @_ if $_[0] eq __PACKAGE__;
+	PEF::Log::Config::reload(@_);
 }
 
 sub get_appender ($) {
