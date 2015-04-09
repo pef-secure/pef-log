@@ -26,18 +26,17 @@ BEGIN {
 
 sub import {
 	my ($class, @args) = @_;
-	my $sublevels;
+	my ($sln, $sublevels);
 	for (my $i = 0 ; $i < @args ; ++$i) {
 		if ($args[$i] eq 'sublevels') {
-			my (undef, $sublevels) = splice @args, $i, 2;
+			($sln, $sublevels) = splice @args, $i, 2;
 			--$i;
 			$sublevels = [$sublevels] if 'ARRAY' ne ref $sublevels;
 		}
 	}
 	require PEF::Log::Levels;
-	if ($sublevels) {
-		PEF::Log::Levels->import(sublevels => $sublevels);
-	}
+	my @slim = $sln ? ($sln, $sublevels) : ();
+	PEF::Log::Levels->import(@slim);
 	my %imps = map { $_ => undef } @args, @EXPORT;
 	$class->export_to_level(1, $class, keys %imps);
 
@@ -47,6 +46,12 @@ sub new {
 	my ($class, %params) = @_;
 	PEF::Log::Config->new(%params);
 	bless \my $a, $_[0];
+}
+
+sub get_appender ($) {
+	my $ap = $_[0];
+	return if not exists $PEF::Log::Config::config{appenders}{$ap};
+	$PEF::Log::Config::config{appenders}{$ap};
 }
 
 sub stash {
@@ -84,15 +89,12 @@ sub pop_context ($) {
 	}
 }
 
-sub route {
+sub _route {
 	my ($level, $sublevel) = @_;
 	my $routes = $PEF::Log::Config::config{routes};
 	my $context;
 	my $subroutine;
-	if (exists ($routes->{context}) && 'HASH' eq ref ($routes->{context}) && %{$routes->{context}}) {
-		$context = context();
-		$context = undef unless exists $routes->{context}{$context};
-	}
+	my @scd;
 	if (exists ($routes->{subroutine}) && 'HASH' eq ref ($routes->{subroutine}) && %{$routes->{subroutine}}) {
 		my $ssn;
 		for (my $stlvl = 1 ; ; ++$stlvl) {
@@ -111,7 +113,21 @@ sub route {
 				}
 			}
 		}
+		push @scd, $routes->{subroutine}{$subroutine} if $subroutine;
 	}
+	if (exists ($routes->{context}) && 'HASH' eq ref ($routes->{context}) && %{$routes->{context}}) {
+		$context = context();
+		$context = undef unless exists $routes->{context}{$context};
+		push @scd, $routes->{context}{$context} if $context;
+	}
+	if (exists ($routes->{package}) && 'HASH' eq ref ($routes->{package}) && %{$routes->{package}}) {
+		my $package = caller (1);
+		if (not exists $routes->{package}{$package}) {
+			$package = undef;
+		}
+		push @scd, $routes->{package}{$package} if $package;
+	}
+	push @scd, $routes->{default} if exists $routes->{default};
 	my $opts;
 	my $apnd      = [];
 	my $check_lvl = sub {
@@ -139,10 +155,6 @@ sub route {
 	};
 	my @larr = ($level);
 	push @larr, $sublevel if $sublevel;
-	my @scd;
-	push @scd, $routes->{subroutine}{$subroutine} if $subroutine;
-	push @scd, $routes->{context}{$context}       if $context;
-	push @scd, $routes->{default}                 if exists $routes->{default};
 	for my $ft (@scd) {
 		$opts = $ft;
 		for my $l (@larr) {
@@ -155,7 +167,8 @@ sub route {
 
 sub logit {
 	state $lvl_prefix = "PEF::Log::Levels::";
-	for my $msg (@_) {
+	for (my $imsg = 0 ; $imsg < @_ ; ++$imsg) {
+		my $msg = $_[$imsg];
 		my $blt = blessed $msg;
 		if (not $blt) {
 			$msg = PEF::Log::Levels::warning { {"not blessed message" => $msg} };
@@ -166,12 +179,16 @@ sub logit {
 			$blt = blessed $msg;
 		}
 		my ($level, $sublevel) = split /::/, substr ($blt, length $lvl_prefix);
-		my $appenders = route($level, $sublevel);
+		my $appenders = _route($level, $sublevel);
 		return if !@$appenders;
 		my @mval = $msg->();
 		for my $omv (@mval) {
 			for my $ap (@$appenders) {
-				$ap->append($level, $sublevel, $omv);
+				if (not exists $PEF::Log::Config::config{appenders}{$ap}) {
+					push @_, PEF::Log::Levels::error { {"unknown appender" => $ap} };
+				} else {
+					$PEF::Log::Config::config{appenders}{$ap}->append($level, $sublevel, $omv);
+				}
 			}
 		}
 	}

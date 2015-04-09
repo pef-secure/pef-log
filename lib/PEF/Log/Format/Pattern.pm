@@ -53,8 +53,8 @@ sub new {
 
 sub build_formatter {
 	my $self       = $_[0];
-	my $format     = $self->{stringify};
-	my $stringify  = $self->{format};
+	my $format     = $self->{format};
+	my $stringify  = $self->{stringify};
 	my %info_parts = (
 		d => sub {
 			my ($params) = @_;
@@ -72,7 +72,7 @@ IP
 		s => sub {
 			my ($params) = @_;
 			s => <<IP
-			\$info{s} = \$sublevel;
+			\$info{s} = \$sublevel || '';
 IP
 		},
 		n => sub {
@@ -143,7 +143,7 @@ IP
 		},
 		caller => sub {
 			<<CALLER
-			my (\$package, undef, \$line) = caller(\$PEF::Log::caller_offset + 0);
+			my (\$package, undef, \$line) = caller(\$PEF::Log::caller_offset + 3);
 			\$info{L} = \$line // '[undef]';
 			\$info{C} = \$package // 'main';
 CALLER
@@ -152,7 +152,7 @@ CALLER
 			T => <<IP
 			{
 				require Carp;
-				local \$Carp::CarpLevel = \$Carp::CarpLevel + \$PEF::Log::caller_offset + 1;
+				local \$Carp::CarpLevel = \$Carp::CarpLevel + \$PEF::Log::caller_offset + 4;
 				my \$mess = Carp::longmess(); 
 				chomp(\$mess);
 				\$mess =~ s/(?:\\A\\s*at.*\\n|^\\s*)//mg;
@@ -184,7 +184,7 @@ IP
 			my ($params) = @_;
 			S => <<IP
 			my \$subroutine;
-			for(my \$stlvl = 1;;++\$stlvl) {
+			for(my \$stlvl = 4;;++\$stlvl) {
 				my \@caller = caller(\$PEF::Log::caller_offset + \$stlvl);
 				\$subroutine = \$caller[3];
 				last if not defined \$subroutine;

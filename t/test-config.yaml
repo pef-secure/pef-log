@@ -63,4 +63,7 @@ routes:
   subroutine:
     test_subroutine:
       info: screen
+  package:
+    Test:
+      debug: screen
       
