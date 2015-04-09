@@ -1,26 +1,34 @@
 package PEF::Log;
 use strict;
 use warnings;
+use Carp;
 use Time::HiRes qw(time);
 use PEF::Log::Config;
 use Scalar::Util qw(weaken blessed reftype);
 use base 'Exporter';
 use feature 'state';
 
+our $VERSION = '0.01';
+
 our @EXPORT = qw{
+  logcache
+  logcontext
   logit
+  logstore
 };
 
 our $start_time;
 our $last_log_event;
 our $caller_offset;
 our @context;
+our @context_stash;
 our %stash;
 
 BEGIN {
 	$start_time     = time;
 	$last_log_event = 0;
 	@context        = (\"main");
+	@context_stash  = ({});
 	$caller_offset  = 0;
 }
 
@@ -42,10 +50,14 @@ sub import {
 
 }
 
-sub new {
+sub init {
 	my ($class, %params) = @_;
 	PEF::Log::Config->new(%params);
-	bless \my $a, $_[0];
+}
+
+sub reload {
+	my ($class, $params) = @_;
+	PEF::Log::Config->reload($params);
 }
 
 sub get_appender ($) {
@@ -54,7 +66,7 @@ sub get_appender ($) {
 	$PEF::Log::Config::config{appenders}{$ap};
 }
 
-sub stash {
+sub logstore {
 	if (@_ == 1) {
 		$stash{$_[0]};
 	} elsif (@_ == 0) {
@@ -66,24 +78,40 @@ sub stash {
 
 sub _clean_context {
 	pop @context while @context and not defined $context[-1];
+	splice @context_stash, scalar @context;
 }
 
-sub context {
+sub logcache {
 	_clean_context;
-	return ${$context[-1]};
+	my $cache = $context_stash[-1];
+	if (@_ == 1) {
+		$cache->{$_[0]};
+	} elsif (@_ == 0) {
+		$cache;
+	} else {
+		$cache->{$_[0]} = $_[1];
+	}
 }
 
-sub push_context (\$) {
+sub logcontext {
 	_clean_context;
-	push @context, $_[0];
-	weaken($context[-1]);
+	if (@_) {
+		carp "not scalar reference" if 'SCALAR' ne ref $_[0];
+		push @context, $_[0];
+		weaken($context[-1]);
+		push @context_stash, {};
+		return ${$context[-1]} if defined wantarray;
+	} else {
+		${$context[-1]};
+	}
 }
 
-sub pop_context ($) {
+sub popcontext ($) {
 	_clean_context;
 	for (my $i = @context - 1 ; $i > 0 ; --$i) {
 		if (${$context[$i]} eq $_[0]) {
-			splice @context, $i;
+			splice @context,       $i;
+			splice @context_stash, $i;
 			last;
 		}
 	}
@@ -116,7 +144,7 @@ sub _route {
 		push @scd, $routes->{subroutine}{$subroutine} if $subroutine;
 	}
 	if (exists ($routes->{context}) && 'HASH' eq ref ($routes->{context}) && %{$routes->{context}}) {
-		$context = context();
+		$context = logcontext();
 		$context = undef unless exists $routes->{context}{$context};
 		push @scd, $routes->{context}{$context} if $context;
 	}

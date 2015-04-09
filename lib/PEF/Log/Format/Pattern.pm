@@ -35,7 +35,8 @@ sub _quote_sep {
 #       current logging event
 #    %T A stack trace of functions called
 #    %x The topmost context name
-#    %G{} Value of the key from global stash
+#    %c{} Value of the key from context cache
+#    %G{} Value of the key from global store
 #    %% A literal percent (%) sign
 
 sub new {
@@ -218,6 +219,22 @@ IP
 			\$info{x} = PEF::Log::context;
 IP
 		},
+		c => sub {
+			my ($params) = @_;
+			my @keys = grep { $_ ne '' } map { s/^\s+//; s/\s+$//; $_ } split ',', $params;
+			my $kl = join ",", map { _quote_sep $_} @keys;
+			my $hashmsg;
+			if (@keys == 0) {
+				$hashmsg = "$stringify->stringify(PEF::Log::logcache())";
+			} elsif (@keys == 1) {
+				$hashmsg = "PEF::Log::logcache($kl)";
+			} else {
+				$hashmsg = "$stringify->stringify({map { \$_ => PEF::Log::logcache(\$_)} ($kl)})";
+			}
+			"c$params" => <<IP
+			\$info{"c$params"} = $hashmsg;
+IP
+		},
 		G => sub {
 			my ($params) = @_;
 			return () if $params eq '';
@@ -228,11 +245,11 @@ IP
 			my $kl = join ",", map { _quote_sep $_} @keys;
 			my $hashmsg;
 			if (@keys == 0) {
-				$hashmsg = "$stringify->stringify(PEF::Log::stash)";
+				$hashmsg = "$stringify->stringify(PEF::Log::logstore())";
 			} elsif (@keys == 1) {
-				$hashmsg = "PEF::Log::stash($kl)";
+				$hashmsg = "PEF::Log::logstore($kl)";
 			} else {
-				$hashmsg = "$stringify->stringify({map { \$_ => PEF::Log::stash(\$_)} ($kl)})";
+				$hashmsg = "$stringify->stringify({map { \$_ => PEF::Log::logstore(\$_)} ($kl)})";
 			}
 			"G$params" => <<IP
 			\$info{"G$params"} = $hashmsg;
@@ -253,7 +270,7 @@ IP
 		}
 	};
 	$format =~ s/%(-?\d*(?:\.\d+)?) 
-                  ([dlsnmMLCSPrRTxG%])
+                  ([dlsnmMLCSPrRTxcG%])
                   (?:\{(.*?)\})*/
                   $bfs->($1||'', $2, $3||'')
                 /gex;

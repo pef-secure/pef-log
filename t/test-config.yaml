@@ -37,7 +37,8 @@ appenders:
 #       current logging event 
 #    %T A stack trace of functions called
 #    %x The topmost context name
-#    %G{} Value of the key from global stash
+#    %c{} Value of the key from context cache
+#    %G{} Value of the key from global store
 #    %% A literal percent (%) sign
 formats:
   line:
