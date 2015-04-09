@@ -3,7 +3,7 @@ use lib "$Bin/../lib";
 use Test::More;
 
 use PEF::Log (sublevels => [qw(input output sub)]);
-PEF::Log->new(plain_config => <<CFG);
+PEF::Log->init(plain_config => <<CFG);
 ---
 appenders:
   screen:
@@ -61,4 +61,20 @@ ok($string{"string-info"} eq "second test message", "second message passed");
 $string{"string-info"} = '';
 logit info { {message => "this is message"} };
 ok($string{"string-info"} eq '"message":"this is message"', "hash message passed");
+logit debug { "unseen" };
+ok($string{"string-debug"} eq '', "debug is off for main");
+logcache X => "main";
+{
+	my $ctx = "second level";
+	logcontext \$ctx;
+	logcache X => $ctx;
+	logit debug { "magic!" };
+	ok($string{"string-debug"} eq 'magic!', "debug is on");
+	$string{"string-debug"} = '';
+	ok(logcache("X") eq $ctx, "context cache is $ctx");
+}
+ok(logcache("X") eq "main", "context cache is main");
+logit debug { "unseen" };
+ok($string{"string-debug"} eq '', "debug is off for main - 2");
+
 done_testing();
