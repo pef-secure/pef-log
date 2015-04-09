@@ -1,0 +1,82 @@
+=head1 NAME
+
+PEF::Log - Loging framework for Perl
+
+=head1 SYNOPSIS
+
+   use PEF::Log;
+   PEF::Log->init(file => "log-config.yaml");
+   
+   logit debug {"started programm"};
+   
+   --or--
+   
+   use PEF::Log (sublevels => [qw(start input output flesh)];
+   PEF::Log->init(file => "log-config.yaml");
+   
+   logit debug::start {"started programm"} info::start {"everything is ok"};
+   # ... some stuff
+   logit debug::output { { result => "OK" } };
+   
+   --or--
+   
+   use PEF::Log;
+   PEF::Log->init(plain_config => <<CONFIG);
+   ---
+   appenders:
+     screen:
+       out: stderr
+       format: line
+     file-debug:
+       class: file
+       out: ./debug.txt
+       format: line
+   formats:
+     line:
+       format: "%d [%P][%l.%s][%C{1}::%S(%L)]: %m%n"
+       stringify: dumpAll
+       class: pattern
+   routes:
+     default:
+       debug: file-debug
+       info: file-debug
+       warning: [file-debug, screen]
+       error: [file-debug, screen]
+       critical: [file-debug, screen]
+       fatal: [file-debug, screen]
+       deadly: [file-debug, screen]
+     context:
+       "secret stuff":
+         debug: off
+   CONFIG
+   {
+     my $ctx = "secret stuff";
+     logcontext \$ctx;
+     # try now debug
+     logit debug {"nobody see it"};
+   }
+   logit debug {"now it magically appears in file-debug"};
+
+=head1 ABSTRACT
+
+PEF::Log provides a very powerful logging API for your application
+
+=head1 DESCRIPTION
+
+PEF::Log lets you control the logging behaviour of your application. 
+PEF::Log has powerful message routing to different 
+log appenders. You can define arbitrary logging sublevels to fine-tune 
+logging behaviour of different application parts on the same level. 
+Additionaly, you can define different contexts with local keys.
+Config data can be reloaded any time.
+
+=over 4
+
+=item *
+
+At a central location in your system (either in a configuration file or
+in the startup code) you specify I<which components> 
+(packages, functions, contexts) of your system should generate logs.
+
+=back
+
