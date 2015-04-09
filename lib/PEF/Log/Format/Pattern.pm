@@ -153,7 +153,7 @@ CALLER
 			T => <<IP
 			{
 				require Carp;
-				local \$Carp::CarpLevel = \$Carp::CarpLevel + \$PEF::Log::caller_offset + 4;
+				local \$Carp::CarpLevel = \$Carp::CarpLevel + \$PEF::Log::caller_offset + 3;
 				my \$mess = Carp::longmess(); 
 				chomp(\$mess);
 				\$mess =~ s/(?:\\A\\s*at.*\\n|^\\s*)//mg;
