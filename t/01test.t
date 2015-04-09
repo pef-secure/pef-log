@@ -2,13 +2,13 @@ use FindBin qw($Bin);
 use lib "$Bin/../lib";
 use Test::More;
 
-use PEF::Log (sublevels => [qw(input output sub)]);
+use PEF::Log (sublevels => [qw(input output subroutine)]);
 PEF::Log->init(plain_config => <<CFG);
 ---
 appenders:
   screen:
-    format: line
-    out: stdout
+    format: line-combo
+    out: stderr
   string-debug:
     format: line
     class: string
@@ -16,10 +16,10 @@ appenders:
     format: line
     class: string
   string-warning:
-    format: line
+    format: line-level
     class: string
   string-error:
-    format: line
+    format: line-level-sublevel
     class: string
   string-critical:
     format: line
@@ -32,11 +32,23 @@ formats:
     format: "%m"
     stringify: dumpAll
     class: pattern
+  line-level:
+    format: "%l: %m"
+    stringify: dumpAll
+    class: pattern
+  line-level-sublevel:
+    format: "%l.%s: %m"
+    stringify: dumpAll
+    class: pattern
+  line-combo:
+    format: "%d [%P][%l.%s][%C{1}::%S(%L)]: %m%n"
+    stringify: dumpAll
+    class: pattern
 routes:
   default:
     debug: string-debug
     info: string-info
-    warning: [string-info]
+    warning: [string-warning]
     error: [string-error, screen]
     critical: [string-critical, screen]
     fatal: [string-fatal, screen]
@@ -76,5 +88,11 @@ logcache X => "main";
 ok(logcache("X") eq "main", "context cache is main");
 logit debug { "unseen" };
 ok($string{"string-debug"} eq '', "debug is off for main - 2");
+logit warning { "something happened" };
+ok($string{"string-warning"} eq 'warning: something happened', "warning");
+$string{"string-warning"} = '';
+logit error::output { "something bad happened" };
+ok($string{"string-error"} eq 'error.output: something bad happened', "error::output");
+$string{"string-error"} = '';
 
 done_testing();
