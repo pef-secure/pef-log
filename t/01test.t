@@ -41,7 +41,7 @@ formats:
     stringify: dumpAll
     class: pattern
   line-combo:
-    format: "%d [%P][%l.%s][%C{1}::%S(%L)]: %m%n"
+    format: "%d [%P][%l.%s][%C{1}::%S(%L)]: %T %m%n"
     stringify: dumpAll
     class: pattern
 routes:
@@ -95,4 +95,10 @@ logit error::output { "something bad happened" };
 ok($string{"string-error"} eq 'error.output: something bad happened', "error::output");
 $string{"string-error"} = '';
 
+sub level_up {
+	logit error::output { "something bad happened" };
+	ok($string{"string-error"} eq 'error.output: something bad happened', "error::output");
+	$string{"string-error"} = '';
+}
+level_up;
 done_testing();
