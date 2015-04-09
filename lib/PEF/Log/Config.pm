@@ -6,7 +6,6 @@ use Carp;
 use Scalar::Util qw(blessed);
 
 our @reload_watchers;
-our %config_opts;
 our %config;
 our $config_instance;
 our $file_mtime = 0;
@@ -22,7 +21,7 @@ sub _reload_appenders {
 	}
 	if (exists $config{text}{appenders}) {
 		my @keys = keys %{$config{text}{appenders}};
-		@config_appenders{@keys} = values %{$config{file}{appenders}};
+		@config_appenders{@keys} = values %{$config{text}{appenders}};
 	}
 	my @actual_appenders = keys %{$config{appenders}};
 	for my $ap (@actual_appenders) {
@@ -68,7 +67,7 @@ sub _reload_formats {
 	}
 	if (exists $config{text}{formats}) {
 		my @keys = keys %{$config{text}{formats}};
-		@config_formats{@keys} = values %{$config{file}{formats}};
+		@config_formats{@keys} = values %{$config{text}{formats}};
 	}
 	my @actual_formats = keys %{$config{formats}};
 	for my $fmt (@actual_formats) {
@@ -85,12 +84,13 @@ sub _reload_formats {
 		my $name;
 		if (%$conf && exists $conf->{class}) {
 			$name = $conf->{class};
+			eval "require $name";
+			if ($@) {
+				$name = "PEF::Log::Format::" . ucfirst $name;
+				eval "require $name";
+			}
 		} else {
 			$name = "PEF::Log::Format::" . ucfirst $fmt;
-		}
-		eval "require $name";
-		if ($@ and index ("::", $name) == -1) {
-			$name = "PEF::Log::Format::" . ucfirst $name;
 			eval "require $name";
 		}
 		if ($@) {
@@ -108,14 +108,13 @@ sub _reload_routes {
 	}
 	if (exists $config{text}{routes}) {
 		my @keys = keys %{$config{text}{routes}};
-		@config_routes{@keys} = values %{$config{file}{routes}};
+		@config_routes{@keys} = values %{$config{text}{routes}};
 	}
 	$config{routes} = \%config_routes;
 }
 
 sub reload {
 	my ($self, $params) = @_;
-	$params ||= \%config_opts;
 	my $reload = 0;
 	if (exists $params->{file}) {
 		my @bfs = stat $params->{file};
@@ -148,9 +147,7 @@ sub new {
 	my ($class, %params) = @_;
 	croak "no config" unless exists $params{file} or exists $params{plain_config};
 	$config_instance = bless {}, $class;
-	%config_opts = %params;
-	$config_instance->reload;
-	delete $config_opts{plain_config};
+	$config_instance->reload(\%params);
 	$config_instance;
 }
 

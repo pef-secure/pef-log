@@ -14,6 +14,7 @@ sub new {
 sub reload {
 	my ($self, $params) = @_;
 	my $out = $params->{out} or croak "no output file";
+	return $self if exists $self->{fh} and $out eq $self->{out};
 	open my $fh, ">>", $out or croak "can't open output file $out: $!";
 	binmode $fh;
 	$self->{fh} = $fh;
@@ -27,4 +28,9 @@ sub append {
 	my $fh = $self->{fh};
 	print $fh $line;
 }
+
+sub DESTROY {
+	close $_[0]->{fh};
+}
+
 1;

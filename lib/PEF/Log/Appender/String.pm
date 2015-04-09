@@ -5,12 +5,17 @@ use base 'PEF::Log::Appender';
 sub new {
 	my ($class, %params) = @_;
 	my $self = $class->SUPER::new(%params);
-	$self->{out} = \(my $str = '');
+	my $str = '';
+	$self->{out} = \$str;
 	$self;
 }
 
 sub set_out {
 	my ($self, $strref) = @_;
+	if('SCALAR' ne ref $strref) {
+		warn "bad use of PEF::Log::Appender::String::set_out";
+		return;
+	}
 	$$strref //= '';
 	$$strref .= ${$self->{out}};
 	$self->{out} = $strref;
