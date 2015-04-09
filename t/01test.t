@@ -55,4 +55,7 @@ for (keys %string) {
 }
 logit info { "test message" };
 ok($string{"string-info"} eq "test message", "test message passed");
+$string{"string-info"} = '';
+logit info { "second test message" };
+ok($string{"string-info"} eq "second test message", "second message passed");
 done_testing();
