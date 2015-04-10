@@ -209,12 +209,17 @@ sub logit {
 		my ($level, $sublevel) = split /::/, substr ($blt, length $lvl_prefix);
 		my $appenders = _route($level, $sublevel);
 		return if !@$appenders;
-		my @mval = $msg->();
-		for my $omv (@mval) {
-			for my $ap (@$appenders) {
-				if (not exists $PEF::Log::Config::config{appenders}{$ap}) {
-					push @_, PEF::Log::Levels::error { {"unknown appender" => $ap} };
-				} else {
+		my @mval;
+		my $got_messages = 0;
+		for my $ap (@$appenders) {
+			if (not exists $PEF::Log::Config::config{appenders}{$ap}) {
+				push @_, PEF::Log::Levels::error { {"unknown appender" => $ap} };
+			} else {
+				if (!$got_messages) {
+					$got_messages = 1;
+					@mval         = $msg->();
+				}
+				for my $omv (@mval) {
 					$PEF::Log::Config::config{appenders}{$ap}->append($level, $sublevel, $omv);
 				}
 			}
