@@ -63,20 +63,84 @@ PEF::Log provides a very powerful logging API for your application
 
 =head1 DESCRIPTION
 
-PEF::Log lets you control the logging behaviour of your application. 
-PEF::Log has powerful message routing to different 
-log appenders. You can define arbitrary logging sublevels to fine-tune 
-logging behaviour of different application parts on the same level. 
-Additionaly, you can define different contexts with local keys.
-Config data can be reloaded any time.
+PEF::Log makes logging easy and intuitive. It combines performance and very 
+fine-grained logging behaviour of your application.
 
 =over 4
 
 =item *
 
-At a central location in your system (either in a configuration file or
-in the startup code) you specify I<which components> 
-(packages, functions, contexts) of your system should generate logs.
+Logging messages are lazy calculated because they are inside anonymous code 
+reference which is good for performance. 
+
+=item *
+
+It has an automatic context stack management with localized cache. 
+
+=item *
+
+Message routing can depend on context, subroutinte or package.  
+
+=item *
+
+Logging levels can have sublevels to control logging behaviour of diferent parts 
+on the same logging levels.  
+
+=item *
+
+Logging messages can be simple strings, anonymous arrays or hashes.
+
+=item *
+
+It is possible to inject transformation filters for given log appenders.
+
+=item *
+ 
+Logger's config can be reloaded any time.
 
 =back
 
+=head1 How to use it
+
+First, it must be initialized in your application startup code.
+
+   use PEF::Log;
+   PEF::Log->init(file => "log-config.yaml");
+
+To use sublevels, they must be passed as import arguments to PEF::Log:
+
+   use PEF::Log (sublevels => [qw(start input output flesh)];
+   PEF::Log->init(file => "log-config.yaml");
+
+Config file must be in YAML format. You can also use C<plain_config> parameter
+to pass config as plain text in YAML format. Don't intermix C<plain_config> 
+and C<file> options, they are known to be not merging properly.
+
+Second, just use it.
+
+   logit info {"started programm"};
+
+C<logit> is exported by default logging function. It accepts messages after 
+passing them through one of the B<level-functions>, such as: C<debug>,
+C<info>, C<warning>, C<error>, C<critical>, C<fatal> and C<deadly>, which are
+also exported. C<deadly> means "log and die". It flushes open appenders and dies.
+
+With defined sublevels every of B<level-functions> is multiplicated by every 
+sublevel, e.g.: C<debug::start>, C<debug::input>, C<debug::output>, 
+C<debug::flesh>, and so on.
+
+B<Level-functions> accepts code block as it first argument. Code blocks are 
+executed only when this particular log level finds its appender. Its returned 
+values are used as logging messages. Every value - one message. 
+B<Level-functions> passes all others arguments unchanged.  Therefore it is 
+possible to log different levels in one go:
+
+   logit debug::start {"started programm"} info::start {"everything is ok"};
+
+One of the interesting features is using structured messages to log:
+
+   logit debug::input { {input => \%params } };
+
+This anonymous hash is passed to apropriate appenders as is. Line-oriented
+appenders can transform such message into string using B<pattern> formatter. 
+=cut
