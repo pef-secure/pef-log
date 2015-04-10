@@ -94,7 +94,7 @@ IP
 				if (@keys == 0) {
 					$hashmsg = "$stringify->stringify(\$message)";
 				} elsif (@keys == 1) {
-					$hashmsg = "\$message->{$kl}";
+					$hashmsg = "ref(\$message->{$kl})? $stringify->stringify(\$message->{$kl}): \$message->{$kl}";
 				} else {
 					$hashmsg = "$stringify->stringify({map { \$_ => \$message->{\$_}} ($kl)})";
 				}
@@ -227,7 +227,7 @@ IP
 			if (@keys == 0) {
 				$hashmsg = "$stringify->stringify(PEF::Log::logcache())";
 			} elsif (@keys == 1) {
-				$hashmsg = "PEF::Log::logcache($kl)";
+				$hashmsg = "ref(PEF::Log::logcache($kl))? $stringify->stringify(PEF::Log::logcache($kl)): PEF::Log::logcache($kl)";
 			} else {
 				$hashmsg = "$stringify->stringify({map { \$_ => PEF::Log::logcache(\$_)} ($kl)})";
 			}
@@ -247,7 +247,7 @@ IP
 			if (@keys == 0) {
 				$hashmsg = "$stringify->stringify(PEF::Log::logstore())";
 			} elsif (@keys == 1) {
-				$hashmsg = "PEF::Log::logstore($kl)";
+				$hashmsg = "ref(PEF::Log::logstore($kl))? $stringify->stringify(PEF::Log::logstore($kl)): PEF::Log::logstore($kl)";
 			} else {
 				$hashmsg = "$stringify->stringify({map { \$_ => PEF::Log::logstore(\$_)} ($kl)})";
 			}
