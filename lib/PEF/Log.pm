@@ -158,15 +158,13 @@ sub _route {
 	push @scd, $routes->{default} if exists $routes->{default};
 	my $opts;
 	my $apnd      = [];
+	my $fappnd    = [];
+	my $foundsmth = 0;
+	my $plength;
 	my $check_lvl = sub {
 		my $lvl = $_[0];
-		if (not exists $opts->{$lvl}) {
-			if (exists $opts->{default}) {
-				$lvl = 'default';
-			} else {
-				return;
-			}
-		}
+		++$plength;
+		return if not exists $opts->{$lvl};
 		if (not ref $opts->{$lvl}) {
 			if ($opts->{$lvl} eq 'off') {
 				$opts = undef;
@@ -184,13 +182,24 @@ sub _route {
 	my @larr = ($level);
 	push @larr, $sublevel if $sublevel;
 	for my $ft (@scd) {
-		$opts = $ft;
+		$opts    = $ft;
+		$plength = 0;
 		for my $l (@larr) {
 			last if not $check_lvl->($l);
 		}
-		last if not $opts or @$apnd;
+		if (not $opts or @$apnd) {
+			if ($plength == @larr) {
+				$fappnd = $apnd;
+				last;
+			} else {
+				if (!$foundsmth) {
+					@$fappnd   = @$apnd;
+					$foundsmth = 1;
+				}
+			}
+		}
 	}
-	$apnd;
+	$fappnd;
 }
 
 sub logit {
