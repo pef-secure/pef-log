@@ -224,6 +224,7 @@ sub logit {
 				}
 			}
 		}
+		$last_log_event = time if $got_messages;
 	}
 }
 
