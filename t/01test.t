@@ -63,7 +63,7 @@ my %string =
   map { $_ => '' } qw(string-debug string-info string-warning string-error string-critical string-fatal);
 
 for (keys %string) {
-	PEF::Log::get_appender($_)->set_out(\$string{$_});
+	logappender($_)->set_out(\$string{$_});
 }
 logit info { "test message" };
 ok($string{"string-info"} eq "test message", "test message passed");
@@ -101,4 +101,8 @@ sub level_up {
 	$string{"string-error"} = '';
 }
 level_up;
+eval {
+	logit deadly { "must die here" };
+};
+ok($@ eq "it's time to die at 01test.t line " . (__LINE__ - 2) . ".\n", "deadly works");
 done_testing();

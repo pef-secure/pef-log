@@ -11,6 +11,7 @@ use feature 'state';
 our $VERSION = '0.01';
 
 our @EXPORT = qw{
+  logappender
   logcache
   logcontext
   logit
@@ -60,7 +61,7 @@ sub reload {
 	PEF::Log::Config::reload(@_);
 }
 
-sub get_appender ($) {
+sub logappender ($) {
 	my $ap = $_[0];
 	return if not exists $PEF::Log::Config::config{appenders}{$ap};
 	$PEF::Log::Config::config{appenders}{$ap};
@@ -234,6 +235,17 @@ sub logit {
 			}
 		}
 		$last_log_event = time if $got_messages;
+		if ($level eq 'deadly') {
+			my @all_appenders = keys %{$PEF::Log::Config::config{appenders}};
+			for my $ap (@all_appenders) {
+				my $apnd = logappender($ap);
+				if ($apnd->can("final")) {
+					$apnd->final;
+				}
+				delete $PEF::Log::Config::config{appenders}{$ap};
+			}
+			croak "it's time to die";
+		}
 	}
 }
 

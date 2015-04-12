@@ -29,8 +29,15 @@ sub append {
 	print $fh $line;
 }
 
+sub final {
+	if ($_[0]->{fh}) {
+		close $_[0]->{fh};
+		undef $_[0]->{fh};
+	}
+}
+
 sub DESTROY {
-	close $_[0]->{fh};
+	$_[0]->final;
 }
 
 1;
