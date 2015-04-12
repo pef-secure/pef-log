@@ -284,6 +284,41 @@ B<subroutine>, B<context>, B<package>, B<default>. When logging level
 with possible sublevel is found then found appenders are used.
 
 
-=back 
+=back
+
+=head2 Pattern formatter
+
+There's one pattern formatter in C<PEF::Log>. It's very powerfull and
+probalbly the only one that is needed. Different appenders can use different
+formats. When you need one more log pattern, create new appender with this 
+format.
+
+The format string can contain a number of placeholders which will be
+replaced by the logging engine when it's time to log the message:
+
+   %d Current date in %y.%m.%d %H:%M:%S format
+   %d{...} Current date in customized format
+   %l Level of the message to be logged
+   %s Sublevel of the message to be logged
+   %n New line
+   %m Stringified message to be logged
+   %m{} Key value(s) of message to be logged
+   %M{} Excluded key value(s) of message to be logged
+   %L Line number within the file where the log statement was issued
+   %C{} Module/Class name or its part from end where the logging request was issued
+   %S subroutine where the logging request was issued
+   %P pid of the current process
+   %r Number of milliseconds elapsed from program start to logging
+      event
+   %R Number of milliseconds elapsed from last logging event to
+      current logging event
+   %T A stack trace of functions called
+   %x The topmost context name
+   %c{} Value of the key from context cache
+   %G{} Value of the key from global store
+   %% A literal percent (%) sign
+
+All placeholders are quantifiable, just like in printf. Following this tradition, 
+%-20x will reserve 20 chars for the context name and left-justify it.
 
 =cut
