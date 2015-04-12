@@ -29,12 +29,7 @@ sub _reload_appenders {
 			}
 		} else {
 			my $appc = $config_appenders{$ap};
-			my $conf;
-			if ('HASH' eq ref $appc) {
-				$conf = $appc;
-			} else {
-				$conf = {};
-			}
+			my $conf = 'HASH' eq ref ($appc) ? $appc : {};
 			my $name;
 			if (%$conf && exists $conf->{class}) {
 				$name = $conf->{class};
@@ -70,12 +65,7 @@ sub _reload_formats {
 	}
 	for my $fmt (keys %config_formats) {
 		my $fmtpc = $config_formats{$fmt};
-		my $conf;
-		if ('HASH' eq ref $fmtpc) {
-			$conf = $fmtpc;
-		} else {
-			$conf = {};
-		}
+		my $conf = 'HASH' eq ref ($fmtpc) ? $fmtpc : {};
 		my $name;
 		if (%$conf && exists $conf->{class}) {
 			$name = $conf->{class};

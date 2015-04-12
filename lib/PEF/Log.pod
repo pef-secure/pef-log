@@ -146,7 +146,7 @@ appenders can transform such message into string using B<pattern> formatter.
 
    formats:
      line:
-       format: "%d $m{ip} - %m{email}%n"
+       format: "%d %m{ip} - %m{email}%n"
        stringify: dumpAll
        class: pattern
 
@@ -167,5 +167,123 @@ is the same as lexical scope of the binded variable. There's always context
      print logcache "X";       # prints "X-Women"
    }                           # end of the scope of $ctx
    print logcache "X";         # prints "X-Men"
+
+Its purpose is logical differentiation of different application parts with 
+similar interface. E.g.:
+
+   sub send_client_email {
+     # ...
+     my $email = logcache "email";
+     logit debug::email { "sending message to $email" };
+     # ...
+   }
+
+   sub order_handler {
+     # ...
+     my $ctx = "order";
+     logcontext \$ctx;
+     logcache email => $client_email;
+     # ...
+     send_client_email();
+     # ...
+   }
+   
+   sub support_handler {
+     # ...
+     my $ctx = "support";
+     logcontext \$ctx;
+     logcache email => $client_email;
+     # ...
+     send_client_email();
+     # ...
+   }
+
+When C<send_client_email()> is called from C<order_handler()> its logging
+messages can be routed according "order" context which can be different
+from "support" context. It is also possible to use context storage data to
+add into logging information.
+
+=head1 How to configure
+
+Config can be file or text in YAML format. It has three main sections:
+
+=over 4
+
+=item appenders
+
+This section describes log appenders. Configuration parameters of every 
+appender are passed to its constructor. Typical parameters are:
+
+=over 8
+
+=item out
+
+Output file, stream, socket and so on.
+
+=item format
+
+Name of used formatter from B<formats> section. Logging message is passed
+as is when format is not defined.
+
+=item class
+
+Class name for this appender. Class names from C<PEF::Log> modules can be 
+reduced to last word, possibly with lowercased first letter. 
+C<screen> means C<PEF::Log::Appender::Screen>. When class name is not
+pointed out then appender's name is used.
+
+=item filter
+
+Sometimes appender has to transform some data from logging message to another
+values. For example, there's C<id_client> field in the logging data and 
+appender wants client's name to log. This field specifies user's supplied
+class with method C<transform($msg)>. Changed C<$msg> passed further to 
+appender.
+
+=item <any>
+
+Any other parameters passed to appender's constructor.
+
+=back
+
+=item formats
+
+Configuration parameters of every format are passed to its constructor. 
+Formatting class can be supplied by user or C<PEF::Log>'s pattern formatter
+used.
+
+Typical parameters are:
+
+=over 8
+
+=item format
+
+Format specification.
+
+=item class
+
+Class name for this format. Class names from C<PEF::Log> modules can be 
+reduced to last word, possibly with lowercased first letter. 
+C<pattern> means C<PEF::Log::Format::Pattern>. When class name is not
+pointed out then format's name is used.
+
+=item stringify
+
+Class name for stringification of complex data. Class names from C<PEF::Log>
+modules can be reduced to last word, possibly with lowercased first letter. 
+C<dumpAll> means C<PEF::Log::Stringify::DumpAll>. By default is
+C<PEF::Log::Stringify::DumpAll> used.
+
+=back
+
+=item routes
+
+This section defines how to select appenders for the logging message.
+There're four subsections and they are looked in this order through: 
+B<subroutine>, B<context>, B<package>, B<default>. When logging level 
+with possible sublevel is found then found appenders are used.
+
+
+=back 
 
 =cut
