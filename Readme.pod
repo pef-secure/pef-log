@@ -1,0 +1,103 @@
+=head1 NAME
+
+PEF::Log - Logging framework for Perl
+
+=head1 SYNOPSIS
+
+   use PEF::Log;
+   PEF::Log->init(file => "log-config.yaml");
+   
+   logit debug {"started program"};
+   
+   --or--
+   
+   use PEF::Log (sublevels => [qw(start input output flesh)];
+   PEF::Log->init(file => "log-config.yaml");
+   
+   logit debug::start {"started program"} info::start {"everything is ok"};
+   # ... some stuff
+   logit debug::output { { result => "OK" } };
+   
+   --or--
+   
+   use PEF::Log;
+   PEF::Log->init(plain_config => <<CONFIG);
+   ---
+   appenders:
+     screen:
+       out: stderr
+       format: line
+     file-debug:
+       class: file
+       out: ./debug.txt
+       format: line
+   formats:
+     line:
+       format: "%d [%P][%l.%s][%C{1}::%S(%L)]: %m%n"
+       stringify: dumpAll
+       class: pattern
+   routes:
+     default:
+       debug: file-debug
+       info: file-debug
+       warning: [file-debug, screen]
+       error: [file-debug, screen]
+       critical: [file-debug, screen]
+       fatal: [file-debug, screen]
+       deadly: [file-debug, screen]
+     context:
+       "secret stuff":
+         debug: off
+   CONFIG
+   {
+     my $ctx = "secret stuff";
+     logcontext \$ctx;
+     # try now debug
+     logit debug {"nobody see it"};
+   }
+   logit debug {"now it magically appears in file-debug"};
+
+=head1 ABSTRACT
+
+PEF::Log provides a very powerful logging API for your application
+
+=head1 DESCRIPTION
+
+PEF::Log makes logging easy and intuitive. It combines performance and very 
+fine-grained logging behavior of your application.
+
+=over 4
+
+=item *
+
+Logging messages are lazy calculated because they are inside anonymous code 
+reference which is good for performance. 
+
+=item *
+
+It has an automatic context stack management with localized cache. 
+
+=item *
+
+Message routing can depend on context, subroutine or package.  
+
+=item *
+
+Logging levels can possess sublevels for precise control of logging behavior
+of different application parts.  
+
+=item *
+
+Logging messages can be simple strings, anonymous arrays or hashes.
+
+=item *
+
+It is possible to inject transformation filters for some log appenders.
+
+=item *
+ 
+Logger's config can be reloaded at any time.
+
+=back
+
+=cut
