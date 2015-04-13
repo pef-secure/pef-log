@@ -3,6 +3,14 @@ appenders:
   screen:
     out: stderr
     format: line
+  dbi-system:
+    out: test_log
+    filter: changeMe
+    fields: [ip, action, result, comment]
+    skip-not-exists: true
+    skip-undef: true
+    new-row-func: struct_new_row
+    rest: comment
   file-err:
     class: file
     out: ./error.txt
