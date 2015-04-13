@@ -4,6 +4,7 @@ use warnings;
 use Carp;
 use Time::HiRes qw(time);
 use PEF::Log::Config;
+use PEF::Log::Levels ();
 use Scalar::Util qw(weaken blessed reftype);
 use base 'Exporter';
 use feature 'state';
@@ -25,9 +26,6 @@ our @context;
 our @context_stash;
 our %stash;
 
-sub PEF::Log::Levels::error (&@);
-sub PEF::Log::Levels::warning (&@);
-
 BEGIN {
 	$start_time     = time;
 	$last_log_event = 0;
@@ -46,12 +44,12 @@ sub import {
 			$sublevels = [$sublevels] if 'ARRAY' ne ref $sublevels;
 		}
 	}
-	require PEF::Log::Levels;
-	my @slim = $sln ? ($sln, $sublevels) : ();
-	PEF::Log::Levels->import(@slim);
-	my %imps = map { $_ => undef } @args, @EXPORT;
-	$class->export_to_level(1, $class, keys %imps);
-
+	if ($sln) {
+		PEF::Log::Levels->import($sln, $sublevels);
+	} else {
+		PEF::Log::Levels->import();
+	}
+	$class->export_to_level(1, $class, @EXPORT);
 }
 
 sub init {
@@ -208,7 +206,8 @@ sub _route {
 
 sub logit {
 	state $lvl_prefix = "PEF::Log::Levels::";
-	my $log_count = 0;
+	my $log_count    = 0;
+	my $added_errors = 0;
 	for (my $imsg = 0 ; $imsg < @_ ; ++$imsg) {
 		my $msg = $_[$imsg];
 		my $blt = blessed $msg;
@@ -227,7 +226,7 @@ sub logit {
 		my $got_messages = 0;
 		for my $ap (@$appenders) {
 			if (not exists $PEF::Log::Config::config{appenders}{$ap}) {
-				push @_, PEF::Log::Levels::error { {"unknown appender" => $ap} };
+				push @_, PEF::Log::Levels::error { {"unknown appender" => $ap} } if ++$added_errors < 4;
 			} else {
 				if (!$got_messages) {
 					++$log_count;
