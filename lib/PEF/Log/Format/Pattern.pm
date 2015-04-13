@@ -126,7 +126,8 @@ IP
 				my $ss = sub { $sep = _quote_sep $_[0]; '' };
 				(my $cp = $params) =~ s/-sep\s*=>?\s*("?)([^"]*)\1/$ss->($2)/e;
 				my $kl = join ",",
-				  map { _quote_sep($_) => undef } grep { $_ ne '' } map { s/^\s+//; s/\s+$//; $_ } split ',', $params;
+				  map { _quote_sep($_) . " => undef" } grep { $_ ne '' } map { s/^\s+//; s/\s+$//; $_ } split ',',
+				  $params;
 				"M$params" => <<IP
 				if('HASH' eq ref \$message) {
 					my \%known = ($kl);
@@ -227,7 +228,8 @@ IP
 			if (@keys == 0) {
 				$hashmsg = "$stringify->stringify(PEF::Log::logcache())";
 			} elsif (@keys == 1) {
-				$hashmsg = "ref(PEF::Log::logcache($kl))? $stringify->stringify(PEF::Log::logcache($kl)): PEF::Log::logcache($kl)";
+				$hashmsg =
+				  "ref(PEF::Log::logcache($kl))? $stringify->stringify(PEF::Log::logcache($kl)): PEF::Log::logcache($kl)";
 			} else {
 				$hashmsg = "$stringify->stringify({map { \$_ => PEF::Log::logcache(\$_)} ($kl)})";
 			}
@@ -247,7 +249,8 @@ IP
 			if (@keys == 0) {
 				$hashmsg = "$stringify->stringify(PEF::Log::logstore())";
 			} elsif (@keys == 1) {
-				$hashmsg = "ref(PEF::Log::logstore($kl))? $stringify->stringify(PEF::Log::logstore($kl)): PEF::Log::logstore($kl)";
+				$hashmsg =
+				  "ref(PEF::Log::logstore($kl))? $stringify->stringify(PEF::Log::logstore($kl)): PEF::Log::logstore($kl)";
 			} else {
 				$hashmsg = "$stringify->stringify({map { \$_ => PEF::Log::logstore(\$_)} ($kl)})";
 			}
