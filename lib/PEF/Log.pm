@@ -25,6 +25,9 @@ our @context;
 our @context_stash;
 our %stash;
 
+sub PEF::Log::Levels::error (&@);
+sub PEF::Log::Levels::warning (&@);
+
 BEGIN {
 	$start_time     = time;
 	$last_log_event = 0;
