@@ -208,6 +208,7 @@ sub _route {
 
 sub logit {
 	state $lvl_prefix = "PEF::Log::Levels::";
+	my $log_count = 0;
 	for (my $imsg = 0 ; $imsg < @_ ; ++$imsg) {
 		my $msg = $_[$imsg];
 		my $blt = blessed $msg;
@@ -229,6 +230,7 @@ sub logit {
 				push @_, PEF::Log::Levels::error { {"unknown appender" => $ap} };
 			} else {
 				if (!$got_messages) {
+					++$log_count;
 					$got_messages = 1;
 					@mval         = $msg->();
 				}
@@ -250,6 +252,7 @@ sub logit {
 			croak "it's time to die";
 		}
 	}
+	$log_count;
 }
 
 1;
