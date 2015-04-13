@@ -15,7 +15,7 @@ sub new {
 	if (exists ($params{filter}) && $params{filter}) {
 		eval "use $params{filter}";
 		croak $@ if $@;
-		$self->{filter} = "$params{filter}"->new;
+		$self->{filter} = "$params{filter}"->new(\%params);
 	}
 	if (exists ($params{format}) && $params{format}) {
 		no warnings 'once';
@@ -31,7 +31,7 @@ sub append {
 	my ($self, $level, $sublevel, $msg) = @_;
 	if ($self->{filter}) {
 		$msg = clone $msg;
-		$self->{filter}->transform($msg);
+		$self->{filter}->transform($level, $sublevel, $msg);
 	}
 	if ($self->{formatter}) {
 		return $self->{formatter}->($level, $sublevel, $msg);
