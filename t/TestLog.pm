@@ -7,8 +7,10 @@ sub new {
 
 sub transform {
 	my ($self, $level, $sublevel, $msg) = @_;
-	croak "not a hash message" if 'HASH' ne ref $msg;
-	$msg->{level} = $level;
+	if ('HASH' eq ref $msg) {
+		$msg->{level} = $level;
+	}
+	$msg if defined wantarray;
 }
 
 1;
