@@ -30,8 +30,7 @@ sub new {
 sub append {
 	my ($self, $level, $sublevel, $msg) = @_;
 	if ($self->{filter}) {
-		$msg = clone $msg;
-		$self->{filter}->transform($level, $sublevel, $msg);
+		$msg = $self->{filter}->transform($level, $sublevel, clone $msg);
 	}
 	if ($self->{formatter}) {
 		return $self->{formatter}->($level, $sublevel, $msg);
