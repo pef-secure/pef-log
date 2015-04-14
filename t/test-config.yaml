@@ -11,6 +11,10 @@ appenders:
     skip-undef: true
     new-row-func: struct_new_row
     rest: comment
+  dump:
+    out: "%G{session}/%C::%S::%x"
+    format: yaml
+    cut-line: "------------- %d -------------%n"
   file-err:
     class: file
     out: ./error.txt
