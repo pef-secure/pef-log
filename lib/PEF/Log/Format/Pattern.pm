@@ -49,7 +49,12 @@ sub new {
 	}
 	croak "error loading stringify module: $stringify" if $@;
 	my $format = $params{format} || "%d %m%n";
-	bless {stringify => $stringify, format => $format}, $_[0];
+	my $multiline = $params{multiline} // 0;
+	bless {
+		stringify => $stringify,
+		format    => $format,
+		multiline => $multiline
+	}, $class;
 }
 
 sub build_formatter {
@@ -287,14 +292,48 @@ IP
 		$code .= $need_info{$info};
 	}
 	my $spra = join ",", @need_ops;
+	my $line = "sprintf $sprf, $spra";
+	if ($self->{multiline}) {
+		my $ops = join ",", map { $_ ne "\$info{'n'}" ? "[split /\\n/, $_]" : qq{["\\n"]} } @need_ops;
+		my $indices = join ",", map { "0" } @need_ops;
+		$line = <<ML
+		my \@indices = ($indices);
+		my \@ops = ($ops);
+		my \@ret;
+		while(1) {
+			my \$moved = 0;
+			my \@args;
+			for (my \$i = 0; \$i < \@ops; ++\$i) {
+				my \$ni = \$indices[\$i];
+				my \$arg;
+				if(\@{\$ops[\$i]} != 1) {
+					if(\$ni < \@{\$ops[\$i]}) {
+						\$moved = 1 if \$ni < \@{\$ops[\$i]} - 1;
+						++\$indices[\$i];
+						\$arg = \$ops[\$i][\$ni];
+					} else {
+						\$arg = '';
+					}
+				} else {
+					\$arg = \$ops[\$i][0];
+				}
+				push \@args, \$arg;
+			}
+			push \@ret, sprintf $sprf, \@args;
+			last if not \$moved;
+		}
+		join "", \@ret
+ML
+	}
 	my $formatter = <<FMT;
 	sub {
 		my (\$level, \$sublevel, \$message) = \@_;
 		my \%info;
 		$code
-		sprintf $sprf, $spra;
+		$line;
 	}
 FMT
+	$formatter;
 }
 
 sub formatter {
