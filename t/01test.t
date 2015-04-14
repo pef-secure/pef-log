@@ -1,7 +1,7 @@
 use FindBin qw($Bin);
 use lib "$Bin/../lib";
+use JSON;
 use Test::More;
-
 use PEF::Log (sublevels => [qw(input output subroutine)]);
 PEF::Log->init(plain_config => <<CFG);
 ---
@@ -22,12 +22,18 @@ appenders:
     format: line-level-sublevel
     class: string
   string-critical:
-    format: line
+    format: line-multi
     class: string
   string-fatal:
-    format: line
+    format: json
     class: string
+  dump:
+    out: "%G{session}/%C::here"
+    format: yaml
 formats:
+  dumper:
+  yaml:
+  json:
   line:
     format: "%m"
     stringify: dumpAll
@@ -44,6 +50,10 @@ formats:
     format: "%d [%P][%l.%s][%C{1}::%S(%L)]: %T %m%n"
     stringify: dumpAll
     class: pattern
+  line-multi:
+    format: "%l: * %3m{s1} - %3m{s2} *%n"
+    multiline: true
+    class: pattern
 routes:
   default:
     debug: string-debug
@@ -52,7 +62,7 @@ routes:
     error: [string-error, screen]
     critical: [string-critical, screen]
     fatal: [string-fatal, screen]
-    deadly: screen
+    deadly: [screen, dump] 
   context:
     main:
       debug: off
@@ -101,6 +111,14 @@ sub level_up {
 	$string{"string-error"} = '';
 }
 level_up;
+logit critical { {s1 => "s11\ns12", s2 => "s21\ns22\ns23"} };
+ok( $string{"string-critical"} eq qq{critical: * s11 - s21 *\ncritical: * s12 - s22 *\ncritical: *     - s23 *\n},
+	'multiline'
+);
+logit fatal { {s1 => "s11\ns12", s2 => "s21\ns22\ns23"} };
+is_deeply(decode_json($string{"string-fatal"}), {s1 => "s11\ns12", s2 => "s21\ns22\ns23"}, 'json format');
+$string{"string-fatal"} = '';
+logstore session => "1212";
 eval {
 	logit deadly { "must die here" };
 };
