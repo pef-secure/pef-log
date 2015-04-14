@@ -61,7 +61,7 @@ sub reload {
 	my $std_header = '';
 	if ($self->{filter}) {
 		$std_header .= <<PA
-		\$self->{filter}->transform(\$level, \$sublevel, \$msg);
+		\$msg = \$self->{filter}->transform(\$level, \$sublevel, clone \$msg);
 PA
 	}
 	$std_header .= <<HS;
@@ -183,7 +183,6 @@ NR
 
 sub append {
 	my ($self, $level, $sublevel, $msg) = @_;
-	$msg = clone $msg;
 	if (!$self->{parts}{newrow}) {
 		$self->connector($self->{connector});
 	}
