@@ -158,50 +158,34 @@ sub _route {
 		push @scd, $routes->{package}{$package} if $package;
 	}
 	push @scd, $routes->{default} if exists $routes->{default};
-	my $opts;
-	my $apnd      = [];
-	my $fappnd    = [];
-	my $foundsmth = 0;
-	my $plength;
-	my $check_lvl = sub {
-		my $lvl = $_[0];
-		++$plength;
-		return if not exists $opts->{$lvl};
-		if (not ref $opts->{$lvl}) {
-			if ($opts->{$lvl} eq 'off') {
-				$opts = undef;
-			} else {
-				$apnd = [$opts->{$lvl}];
-			}
-		} elsif ('ARRAY' eq ref $opts->{$lvl}) {
-			$apnd = $opts->{$lvl};
-		} else {
-			$opts = $opts->{$lvl};
-			return 1;
-		}
-		return;
-	};
-	my @larr = ($level);
-	push @larr, $sublevel if $sublevel;
-	for my $ft (@scd) {
-		$opts    = $ft;
-		$plength = 0;
-		for my $l (@larr) {
-			last if not $check_lvl->($l);
-		}
-		if (not $opts or @$apnd) {
-			if ($plength == @larr) {
-				$fappnd = $apnd;
-				last;
-			} else {
-				if (!$foundsmth) {
-					@$fappnd   = @$apnd;
-					$foundsmth = 1;
+	my $apnd = [];
+	my $lvlsub;
+	$lvlsub = "$level.$sublevel" if $sublevel;
+	for my $opts (@scd) {
+		if ($lvlsub && exists $opts->{$lvlsub}) {
+			$apnd = $opts->{$lvlsub};
+			if (not ref $apnd) {
+				if ($apnd eq 'off') {
+					$apnd = [];
+				} else {
+					$apnd = [$apnd];
 				}
 			}
+			last;
+		}
+		if (exists $opts->{$level}) {
+			$apnd = $opts->{$level};
+			if (not ref $apnd) {
+				if ($apnd eq 'off') {
+					$apnd = [];
+				} else {
+					$apnd = [$apnd];
+				}
+			}
+			last;
 		}
 	}
-	$fappnd;
+	$apnd;
 }
 
 sub logit {

@@ -70,9 +70,8 @@ routes:
     "test debug off":
       debug: off
     "test sublevel":
-      debug:
-        input: off
-        result: screen
+      debug.input: off
+      debug.result: screen
   subroutine:
     test_subroutine:
       info: screen
