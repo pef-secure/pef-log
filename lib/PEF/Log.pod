@@ -283,6 +283,21 @@ There're four subsections and they are looked in this order through:
 B<subroutine>, B<context>, B<package>, B<default>. When logging level 
 with possible sublevel is found then found appenders are used.
 
+   default:
+     warning: screen
+     error: [screen, file-err]
+
+It's possible to customize logging levels with sublevels.
+
+   default:
+     warning: screen
+     error: [screen, file-err]
+     debug: file-debug
+     debug.dump: [dumper, file-debug]
+
+When no other sections found, then B<default> is used. Every debug level
+message will go into B<file-debug> appender except one's with sublevel 
+B<dump>, they will go in to appenders B<dumper> and B<file-debug>.
 
 =back
 
@@ -320,5 +335,24 @@ replaced by the logging engine when it's time to log the message:
 
 All placeholders are quantifiable, just like in printf. Following this tradition, 
 %-20x will reserve 20 chars for the context name and left-justify it.
+
+=head1 Known issues
+
+No known issues.
+
+=head1 See also
+
+This module is all need to see. 
+
+=head1 Authors
+
+This module was written and is maintained by:
+
+=over
+
+=item * PEF Developer <pef-secure@yandex.ru>
+
+=back
+
 
 =cut
