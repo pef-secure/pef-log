@@ -165,7 +165,7 @@ sub _route {
 		if ($lvlsub && exists $opts->{$lvlsub}) {
 			$apnd = $opts->{$lvlsub};
 			if (not ref $apnd) {
-				if ($apnd eq 'off') {
+				if (!defined ($apnd) || $apnd eq 'off' || $apnd eq '') {
 					$apnd = [];
 				} else {
 					$apnd = [$apnd];
@@ -176,7 +176,7 @@ sub _route {
 		if (exists $opts->{$level}) {
 			$apnd = $opts->{$level};
 			if (not ref $apnd) {
-				if ($apnd eq 'off') {
+				if (!defined ($apnd) || $apnd eq 'off' || $apnd eq '') {
 					$apnd = [];
 				} else {
 					$apnd = [$apnd];
