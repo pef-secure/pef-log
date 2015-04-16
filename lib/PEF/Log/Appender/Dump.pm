@@ -17,24 +17,13 @@ sub new {
 
 sub reload {
 	my ($self, $params) = @_;
+	$self->_reload($params);
 	my $out = $params->{out} or croak "no output file";
 	my $out_formatter = PEF::Log::Format::Pattern->new(format => $out)->formatter();
 	my $cut_line = exists ($params->{"cut-line"}) ? $params->{"cut-line"} : "--==< %d >==--%n";
 	my $cut_line_formatter = PEF::Log::Format::Pattern->new(format => $cut_line)->formatter();
 	$self->{out_formatter}      = $out_formatter;
 	$self->{cut_line_formatter} = $cut_line_formatter;
-	if (exists ($params->{filter}) && $params->{filter}) {
-		eval "use $params->{filter}";
-		croak $@ if $@;
-		$self->{filter} = "$params->{filter}"->new($params);
-	}
-	if (exists ($params->{format}) && $params->{format}) {
-		no warnings 'once';
-		if (not exists $PEF::Log::Config::config{formats}{$params->{format}}) {
-			croak "unknown format $params->{format}";
-		}
-		$self->{formatter} = $PEF::Log::Config::config{formats}{$params->{format}};
-	}
 	$self;
 }
 

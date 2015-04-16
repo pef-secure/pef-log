@@ -28,11 +28,7 @@ sub new {
 
 sub reload {
 	my ($self, $params) = @_;
-	if (exists ($params->{filter}) && $params->{filter}) {
-		eval "use $params->{filter}";
-		croak $@ if $@;
-		$self->{filter} = "$params->{filter}"->new($params);
-	}
+	$self->_reload($params);
 	my $log_table = $params->{out} or croak "no log table";
 	$self->{log_table} = $log_table;
 	if (   exists ($params->{dsn})

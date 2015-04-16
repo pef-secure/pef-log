@@ -12,19 +12,24 @@ use warnings;
 sub new {
 	my ($class, %params) = @_;
 	my $self = {%params};
-	if (exists ($params{filter}) && $params{filter}) {
-		eval "use $params{filter}";
-		croak $@ if $@;
-		$self->{filter} = "$params{filter}"->new(\%params);
-	}
-	if (exists ($params{format}) && $params{format}) {
-		no warnings 'once';
-		if (not exists $PEF::Log::Config::config{formats}{$params{format}}) {
-			croak "unknown format $params{format}";
-		}
-		$self->{formatter} = $PEF::Log::Config::config{formats}{$params{format}};
-	}
 	bless $self, $class;
+}
+
+sub _reload {
+	my ($self, $params) = @_;
+	if (exists ($params->{filter}) && $params->{filter}) {
+		eval "use $params->{filter}";
+		croak $@ if $@;
+		$self->{filter} = "$params->{filter}"->new($params);
+	}
+	if (exists ($params->{format}) && $params->{format}) {
+		no warnings 'once';
+		if (not exists $PEF::Log::Config::config{formats}{$params->{format}}) {
+			croak "unknown format $params->{format}";
+		}
+		$self->{formatter} = $PEF::Log::Config::config{formats}{$params->{format}};
+	}
+	$self;
 }
 
 sub append {

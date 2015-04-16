@@ -13,10 +13,12 @@ sub new {
 
 sub reload {
 	my ($self, $params) = @_;
+	$self->_reload($params);
 	my $out = $params->{out} or croak "no output file";
 	return $self if exists $self->{fh} and $out eq $self->{out};
 	open my $fh, ">>", $out or croak "can't open output file $out: $!";
 	binmode $fh;
+	close $self->{fh} if $self->{fh};
 	$self->{fh} = $fh;
 	$self;
 }
