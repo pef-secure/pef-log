@@ -56,7 +56,7 @@ sub new {
 				} else {
 					my $value = $value_dumper->stringify($format_fields->{$key});
 					$formatters{$rf} = eval <<SHF
-			sub { "$value" }
+			sub { $value }
 SHF
 				}
 			} else {
@@ -78,7 +78,7 @@ SHF
 
 sub formatter {
 	my $self = $_[0];
-	return sub {
+	return bless sub {
 		my ($level, $sublevel, $message) = @_;
 		my $gelf = {
 			version   => "1.1",
@@ -87,7 +87,7 @@ sub formatter {
 			map { $_ => $self->{fields}{$_}->($level, $sublevel, $message) } keys %{$self->{fields}}
 		};
 		encode_json $gelf;
-	};
+	}, "PEF::Log::Format::Flags::JSON:GELF";
 }
 
 1;
