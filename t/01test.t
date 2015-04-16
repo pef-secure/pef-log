@@ -122,5 +122,5 @@ logstore session => "1212";
 eval {
 	logit deadly { "must die here" };
 };
-ok($@ eq "it's time to die at 01test.t line " . (__LINE__ - 2) . ".\n", "deadly works");
+like($@, qr/it's time to die at /, "deadly works");
 done_testing();

@@ -1,6 +1,7 @@
 use FindBin qw($Bin);
 use lib "$Bin/../lib";
 use lib "$Bin/../../dbix-struct/lib";
+use lib "$Bin";
 use DBIx::Struct qw(connector);
 use Test::More;
 

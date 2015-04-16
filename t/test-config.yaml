@@ -57,6 +57,17 @@ formats:
     format: "%d [%P][%l.%s][%C{1}::%S(%L)]: %m%n"
     stringify: dumpAll
     class: pattern
+  fluentd:
+    class: fluentdJ
+    tag: "%G{host}.%G{application}.%l.%s"
+    container: gelf
+  gelf:
+    short:
+    full:
+    host:
+    multiline: false
+    extra:
+      user_id: 1
 routes:
   default:
     debug: file-debug

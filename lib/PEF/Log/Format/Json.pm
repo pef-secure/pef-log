@@ -16,7 +16,7 @@ sub new {
 
 sub formatter {
 	my $self = $_[0];
-	return sub {
+	return bless sub {
 		my ($level, $sublevel, $message) = @_;
 		$message = {message => $message} if not ref $message;
 		no warnings 'once';
@@ -25,7 +25,7 @@ sub formatter {
 			return $b_obj->isa("B::HV") ? {%{$_[0]}} : $b_obj->isa("B::AV") ? [@{$_[0]}] : ["(DUMMY)"];
 		};
 		$self->{json}->encode($message) . $self->{need_nl};
-	};
+	}, "PEF::Log::Format::Flags::JSON";
 }
 
 1;
