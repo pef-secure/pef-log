@@ -11,7 +11,7 @@ sub new {
 	$json->allow_blessed(1);
 	$json->convert_blessed(1);
 	$json->pretty(1) if not exists $params{pretty} or not $params{pretty};
-	bless {json => $json}, $class;
+	bless {json => $json, need_nl => $params{"new-line"} || ''}, $class;
 }
 
 sub formatter {
@@ -22,9 +22,9 @@ sub formatter {
 		no warnings 'once';
 		local *UNIVERSAL::TO_JSON = sub {
 			my $b_obj = B::svref_2object($_[0]);
-			return $b_obj->isa("B::HV") ? {%{$_[0]}} : $b_obj->isa("B::AV") ? [@{$_[0]}] : undef;
+			return $b_obj->isa("B::HV") ? {%{$_[0]}} : $b_obj->isa("B::AV") ? [@{$_[0]}] : ["(DUMMY)"];
 		};
-		$self->{json}->encode($message);
+		$self->{json}->encode($message) . $self->{need_nl};
 	};
 }
 
