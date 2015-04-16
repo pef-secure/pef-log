@@ -1,5 +1,8 @@
 package PEF::Log::Stringify::DumpAll;
 use Data::Dumper;
+use Scalar::Util qw(blessed);
+use strict;
+use warnings;
 our $dumper;
 
 BEGIN {
@@ -13,7 +16,7 @@ BEGIN {
 }
 
 sub new {
-	bless \my $a, $_[0];
+	bless \(my $a = $_[1]), $_[0];
 }
 
 sub stringify {
@@ -26,9 +29,11 @@ sub stringify {
 		$dumper->Values([\@params]);
 	}
 	my $ret = $dumper->Dump;
-	if (substr ($ret, 0, 1) eq '{' || substr ($ret, 0, 1) eq '[') {
-		substr ($ret, 0,  1, '');
-		substr ($ret, -1, 1, '');
+	if (not blessed $_[0] or not $$_[0]) {
+		if (substr ($ret, 0, 1) eq '{' || substr ($ret, 0, 1) eq '[') {
+			substr ($ret, 0,  1, '');
+			substr ($ret, -1, 1, '');
+		}
 	}
 	$ret;
 }
