@@ -89,7 +89,7 @@ IP
 				} elsif('ARRAY' eq ref \$message) {
 					\$info{"m$params"} = join($sep, \@\$message);
 				} else {
-					\$info{"m$params"} = \$message;
+					\$info{"m$params"} = \$message // '';
 				}
 IP
 			} else {
@@ -99,7 +99,7 @@ IP
 				} elsif('ARRAY' eq ref \$message) {
 					\$info{m} = join($sep, \@\$message);
 				} else {
-					\$info{m} = \$message;
+					\$info{m} = \$message // '';
 				}
 IP
 			}
@@ -214,7 +214,7 @@ IP
 				$hashmsg = "$stringify->stringify(PEF::Log::logcache())";
 			} elsif (@keys == 1) {
 				$hashmsg =
-				  "ref(PEF::Log::logcache($kl))? $stringify->stringify(PEF::Log::logcache($kl)): PEF::Log::logcache($kl)";
+				  "ref(PEF::Log::logcache($kl))? $stringify->stringify(PEF::Log::logcache($kl)): PEF::Log::logcache($kl) // ''";
 			} else {
 				$hashmsg = "$stringify->stringify({map { \$_ => PEF::Log::logcache(\$_)} ($kl)})";
 			}
@@ -235,7 +235,7 @@ IP
 				$hashmsg = "$stringify->stringify(PEF::Log::logstore())";
 			} elsif (@keys == 1) {
 				$hashmsg =
-				  "ref(PEF::Log::logstore($kl))? $stringify->stringify(PEF::Log::logstore($kl)): PEF::Log::logstore($kl)";
+				  "ref(PEF::Log::logstore($kl))? $stringify->stringify(PEF::Log::logstore($kl)): PEF::Log::logstore($kl) // ''";
 			} else {
 				$hashmsg = "$stringify->stringify({map { \$_ => PEF::Log::logstore(\$_)} ($kl)})";
 			}
