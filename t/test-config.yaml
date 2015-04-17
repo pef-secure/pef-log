@@ -3,6 +3,9 @@ appenders:
   screen:
     out: stderr
     format: line
+  socket:
+    out: unix:///syslog.sock
+    timeout: 10
   dbi-system:
     out: test_log
     filter: changeMe
