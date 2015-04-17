@@ -82,7 +82,7 @@ sub _reload_formats {
 			carp "loading format $fmt: $@";
 			next;
 		}
-		$config{formats}{$fmt} = "$name"->new(%$conf)->formatter;
+		$config{formats}{$fmt} = "$name"->formatter($conf);
 	}
 }
 
@@ -120,6 +120,9 @@ sub reload {
 		my ($cont) = eval { Load $params->{plain_config} };
 		croak $@ if $@;
 		$config{text} = $cont;
+		$reload = 1;
+	} elsif (exists ($params->{config}) && 'HASH' eq ref $params->{config}) {
+		$config{text} = $params->{config};
 		$reload = 1;
 	}
 	if ($reload) {

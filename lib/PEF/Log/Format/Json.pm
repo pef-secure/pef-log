@@ -5,17 +5,13 @@ use B;
 use strict;
 use warnings;
 
-sub new {
-	my ($class, %params) = @_;
+sub formatter {
+	my ($class, $params) = @_;
 	my $json = JSON->new->utf8;
 	$json->allow_blessed(1);
 	$json->convert_blessed(1);
-	$json->pretty(1) if not exists $params{pretty} or not $params{pretty};
-	bless {json => $json, need_nl => $params{"new-line"} || ''}, $class;
-}
-
-sub formatter {
-	my $self = $_[0];
+	$json->pretty(1) if not exists $params->{pretty} or not $params->{pretty};
+	my $need_nl = $params->{need_nl} || '';
 	return bless sub {
 		my ($level, $sublevel, $message) = @_;
 		$message = {message => $message} if not ref $message;
@@ -24,7 +20,7 @@ sub formatter {
 			my $b_obj = B::svref_2object($_[0]);
 			return $b_obj->isa("B::HV") ? {%{$_[0]}} : $b_obj->isa("B::AV") ? [@{$_[0]}] : ["(DUMMY)"];
 		};
-		$self->{json}->encode($message) . $self->{need_nl};
+		$json->encode($message) . $need_nl;
 	}, "PEF::Log::Format::Flags::JSON";
 }
 

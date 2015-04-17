@@ -4,10 +4,15 @@ use base 'PEF::Log::Appender';
 
 sub new {
 	my ($class, %params) = @_;
-	my $self = $class->SUPER::new(%params);
+	my $self = $class->SUPER::new(%params)->reload(\%params);
 	my $str = '';
 	$self->{out} = \$str;
 	$self;
+}
+
+sub reload {
+	my ($self, $params) = @_;
+	$self->_reload($params);
 }
 
 sub set_out {

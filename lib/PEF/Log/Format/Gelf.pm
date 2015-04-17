@@ -26,16 +26,15 @@ our %level_map = (
 	deadly   => 0
 );
 
-sub new {
-	my ($class, %params) = @_;
+sub formatter {
+	my ($class, $params) = @_;
 	my $value_dumper = PEF::Log::Stringify::DumpAll->new(1);
 	my %formatters;
-	$params{short_message} ||= $params{short};
-	$params{full_message}  ||= $params{full};
-	$params{short_message} ||= "%50m";
-	$params{full_message}  ||= "[%l]: %m";
-	$params{host}          ||= "misconfigured.localhost";
-	my %std           = map { $_ => $params{$_} } qw(short_message full_message host);
+	my %std = (
+		short_message => $params->{short_message} || $params->{short} || "%.50m",
+		full_message  => $params->{full_message}  || $params->{full}  || "[%l]: %m",
+		host          => $params->{host}          || "misconfigured.localhost"
+	);
 	my $format_fields = \%std;
 	my $key_prefix    = "";
 	my $make_fmt      = sub {
@@ -45,19 +44,18 @@ sub new {
 			if ($format_fields->{$key}) {
 				if (index ($format_fields->{$key}, '%') != -1) {
 					if ($rf eq 'full_message') {
-						$formatters{$rf} = PEF::Log::Format::Pattern->new(
-							format    => $format_fields->{$key},
-							multiline => $params{multiline}
-						)->formatter();
+						$formatters{$rf} = PEF::Log::Format::Pattern->formatter(
+							{   format    => $format_fields->{$key},
+								multiline => $params->{multiline}
+							}
+						);
 					} else {
 						$formatters{$rf} =
-						  PEF::Log::Format::Pattern->new(format => $format_fields->{$key})->formatter();
+						  PEF::Log::Format::Pattern->formatter({format => $format_fields->{$key}});
 					}
 				} else {
-					my $value = $value_dumper->stringify($format_fields->{$key});
-					$formatters{$rf} = eval <<SHF
-			sub { $value }
-SHF
+					my $value = $format_fields->{$key};
+					$formatters{$rf} = sub { $value };
 				}
 			} else {
 				$formatters{$rf} = sub { "" };
@@ -65,26 +63,18 @@ SHF
 		}
 	};
 	$make_fmt->();
-	if (exists $params{extra}) {
-		$format_fields = $params{extra};
+	if (exists $params->{extra}) {
+		$format_fields = $params->{extra};
 		$key_prefix    = "_";
 		$make_fmt->();
 	}
-	bless {
-		value_dumper => $value_dumper,
-		fields       => \%formatters
-	}, $class;
-}
-
-sub formatter {
-	my $self = $_[0];
 	return bless sub {
 		my ($level, $sublevel, $message) = @_;
 		my $gelf = {
 			version   => "1.1",
 			timestamp => time,
 			level     => $level_map{$level},
-			map { $_ => $self->{fields}{$_}->($level, $sublevel, $message) } keys %{$self->{fields}}
+			map { $_ => $formatters{$_}->($level, $sublevel, $message) } keys %formatters
 		};
 		encode_json $gelf;
 	}, "PEF::Log::Format::Flags::JSON:GELF";

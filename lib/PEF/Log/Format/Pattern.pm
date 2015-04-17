@@ -39,28 +39,8 @@ sub _quote_sep {
 #    %G{} Value of the key from global store
 #    %% A literal percent (%) sign
 
-sub new {
-	my ($class, %params) = @_;
-	my $stringify = $params{stringify} || "PEF::Log::Stringify::DumpAll";
-	eval "require $stringify";
-	if ($@) {
-		$stringify = "PEF::Log::Stringify::" . ucfirst ($stringify);
-		eval "require $stringify";
-	}
-	croak "error loading stringify module: $stringify" if $@;
-	my $format = $params{format} || "%d %m%n";
-	my $multiline = $params{multiline} // 0;
-	bless {
-		stringify => $stringify,
-		format    => $format,
-		multiline => $multiline
-	}, $class;
-}
-
 sub build_formatter {
-	my $self       = $_[0];
-	my $format     = $self->{format};
-	my $stringify  = $self->{stringify};
+	my ($format, $stringify, $multiline) = @_;
 	my %info_parts = (
 		d => sub {
 			my ($params) = @_;
@@ -293,7 +273,7 @@ IP
 	}
 	my $spra = join ",", @need_ops;
 	my $line = "sprintf $sprf, $spra";
-	if ($self->{multiline}) {
+	if ($multiline) {
 		my $ops = join ",", map { $_ ne "\$info{'n'}" ? "[split /\\n/, $_]" : qq{["\\n"]} } @need_ops;
 		my $indices = join ",", map { "0" } @need_ops;
 		$line = <<ML
@@ -337,8 +317,17 @@ FMT
 }
 
 sub formatter {
-	my $self = $_[0];
-	eval $self->build_formatter;
+	my ($class, $params) = @_;
+	my $stringify = $params->{stringify} || "PEF::Log::Stringify::DumpAll";
+	eval "require $stringify";
+	if ($@) {
+		$stringify = "PEF::Log::Stringify::" . ucfirst ($stringify);
+		eval "require $stringify";
+	}
+	croak "error loading stringify module: $stringify" if $@;
+	my $format = $params->{format} || "%d %m%n";
+	my $multiline = $params->{multiline} // 0;
+	eval build_formatter($format, $stringify, $multiline);
 }
 
 1;

@@ -19,9 +19,9 @@ sub reload {
 	my ($self, $params) = @_;
 	$self->_reload($params);
 	my $out = $params->{out} or croak "no output file";
-	my $out_formatter = PEF::Log::Format::Pattern->new(format => $out)->formatter();
+	my $out_formatter = PEF::Log::Format::Pattern->formatter({format => $out});
 	my $cut_line = exists ($params->{"cut-line"}) ? $params->{"cut-line"} : "--==< %d >==--%n";
-	my $cut_line_formatter = PEF::Log::Format::Pattern->new(format => $cut_line)->formatter();
+	my $cut_line_formatter = PEF::Log::Format::Pattern->formatter({format => $cut_line});
 	$self->{out_formatter}      = $out_formatter;
 	$self->{cut_line_formatter} = $cut_line_formatter;
 	$self;
