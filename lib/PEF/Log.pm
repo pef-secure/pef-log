@@ -170,28 +170,35 @@ sub _route {
 	push @scd, $routes->{$routes_default_name} if exists $routes->{$routes_default_name};
 	my $apnd = [];
 	my $lvlsub;
-	$lvlsub = "$level.$sublevel" if $sublevel;
-	for my $opts (@scd) {
-		if ($lvlsub && exists $opts->{$lvlsub}) {
-			$apnd = $opts->{$lvlsub};
-			if (not ref $apnd) {
-				if (!defined ($apnd) || $apnd eq 'off' || $apnd eq '') {
-					$apnd = [];
-				} else {
-					$apnd = [$apnd];
-				}
+	my $dotsub;
+	if ($sublevel) {
+		$lvlsub = "$level.$sublevel";
+		$dotsub = ".$sublevel";
+	}
+	my $apnd_check = sub {
+		if (not ref $apnd) {
+			if (!defined ($apnd) || $apnd eq 'off' || $apnd eq '') {
+				$apnd = [];
+			} else {
+				$apnd = [$apnd];
 			}
-			last;
+		}
+	};
+	for my $opts (@scd) {
+		if ($sublevel) {
+			if (exists $opts->{$lvlsub}) {
+				$apnd = $opts->{$lvlsub};
+				$apnd_check->();
+				last;
+			} elsif (exists $opts->{$dotsub}) {
+				$apnd = $opts->{$dotsub};
+				$apnd_check->();
+				last;
+			}
 		}
 		if (exists $opts->{$level}) {
 			$apnd = $opts->{$level};
-			if (not ref $apnd) {
-				if (!defined ($apnd) || $apnd eq 'off' || $apnd eq '') {
-					$apnd = [];
-				} else {
-					$apnd = [$apnd];
-				}
-			}
+			$apnd_check->();
 			last;
 		}
 	}
