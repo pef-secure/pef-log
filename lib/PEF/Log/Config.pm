@@ -36,6 +36,7 @@ sub _reload_appenders {
 			} else {
 				$name = "PEF::Log::Appender::" . ucfirst $ap;
 			}
+			$name = 'Dump' if $name eq 'dump';
 			eval "require $name";
 			if ($@ and index ("::", $name) == -1) {
 				$name = "PEF::Log::Appender::" . ucfirst $name;
