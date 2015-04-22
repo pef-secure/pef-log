@@ -1,5 +1,6 @@
 package PEF::Log::Appender::File;
 use base 'PEF::Log::Appender';
+use IO::Handle;
 use Carp;
 use strict;
 use warnings;
@@ -18,6 +19,7 @@ sub reload {
 	return $self if exists $self->{fh} and $out eq $self->{out};
 	open my $fh, ">>", $out or croak "can't open output file $out: $!";
 	binmode $fh;
+	$fh->autoflush();
 	close $self->{fh} if $self->{fh};
 	$self->{fh} = $fh;
 	$self;
@@ -28,7 +30,9 @@ sub append {
 	my $line = $self->SUPER::append($level, $sublevel, $msg);
 	utf8::encode($line) if utf8::is_utf8($line);
 	my $fh = $self->{fh};
-	print $fh $line;
+	$fh->print($line);
+	$fh->flush();
+	$fh->sync();
 }
 
 sub final {
