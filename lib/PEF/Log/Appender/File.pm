@@ -19,7 +19,6 @@ sub reload {
 	return $self if exists $self->{fh} and $out eq $self->{out};
 	open my $fh, ">>", $out or croak "can't open output file $out: $!";
 	binmode $fh;
-	$fh->autoflush();
 	close $self->{fh} if $self->{fh};
 	$self->{fh} = $fh;
 	$self;
