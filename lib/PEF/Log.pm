@@ -25,6 +25,7 @@ our $caller_offset;
 our @context;
 our @context_stash;
 our %stash;
+our $routes_default_name;
 
 BEGIN {
 	$start_time     = time;
@@ -46,6 +47,10 @@ sub import {
 			my (undef, $mctx) = splice @args, $i, 2;
 			--$i;
 			$context[0] = \$mctx;
+		} elsif ($args[$i] eq 'routes_default') {
+			my (undef, $rdf) = splice @args, $i, 2;
+			--$i;
+			$routes_default_name = $rdf;
 		}
 	}
 	if ($sln) {
