@@ -28,11 +28,12 @@ our %stash;
 our $routes_default_name;
 
 BEGIN {
-	$start_time     = time;
-	$last_log_event = 0;
-	@context        = (\"main");
-	@context_stash  = ({});
-	$caller_offset  = 0;
+	$start_time          = time;
+	$last_log_event      = 0;
+	@context             = (\"main");
+	@context_stash       = ({});
+	$caller_offset       = 0;
+	$routes_default_name = 'default';
 }
 
 sub import {
@@ -166,7 +167,7 @@ sub _route {
 		}
 		push @scd, $routes->{package}{$package} if $package;
 	}
-	push @scd, $routes->{default} if exists $routes->{default};
+	push @scd, $routes->{$routes_default_name} if exists $routes->{$routes_default_name};
 	my $apnd = [];
 	my $lvlsub;
 	$lvlsub = "$level.$sublevel" if $sublevel;
