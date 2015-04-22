@@ -79,7 +79,7 @@ IP
 				if (@keys == 0) {
 					$hashmsg = "$stringify->stringify(\$message)";
 				} elsif (@keys == 1) {
-					$hashmsg = "ref(\$message->{$kl})? $stringify->stringify(\$message->{$kl}): \$message->{$kl}";
+					$hashmsg = "ref(\$message->{$kl})? $stringify->stringify(\$message->{$kl}): \$message->{$kl} // ''";
 				} else {
 					$hashmsg = "$stringify->stringify({map { \$_ => \$message->{\$_}} ($kl)})";
 				}
