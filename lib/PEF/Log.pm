@@ -42,6 +42,10 @@ sub import {
 			($sln, $sublevels) = splice @args, $i, 2;
 			--$i;
 			$sublevels = [$sublevels] if 'ARRAY' ne ref $sublevels;
+		} elsif ($args[$i] eq 'main_context') {
+			my (undef, $mctx) = splice @args, $i, 2;
+			--$i;
+			$context[0] = \$mctx;
 		}
 	}
 	if ($sln) {
