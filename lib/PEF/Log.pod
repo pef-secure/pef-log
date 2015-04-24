@@ -342,7 +342,7 @@ No known issues.
 
 =head1 See also
 
-This module is all need to see. 
+L<PEF::Log::Appender>, L<PEF::Log::Format> 
 
 =head1 Authors
 
