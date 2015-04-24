@@ -3,15 +3,13 @@ use base 'PEF::Log::Appender';
 use PEF::Log::Format::Pattern;
 use File::Path 'make_path';
 use File::Basename;
-use Data::Dumper;
-use YAML::XS;
 use Carp;
 use strict;
 use warnings;
 
 sub new {
 	my ($class, %params) = @_;
-	my $self = bless ({}, $class)->reload(\%params);
+	my $self = $class->SUPER::new(%params)->reload(\%params);
 	$self;
 }
 
