@@ -20,7 +20,7 @@ sub _quote_sep {
 #    %d Current date in %y.%m.%d %H:%M:%S format
 #    %d{...} Current date in customized format
 #    %l Level of the message to be logged
-#    %s Sublevel of the message to be logged
+#    %s Stream of the message to be logged
 #    %n New line
 #    %m Stringified message to be logged
 #    %m{} Key value(s) of message to be logged
@@ -58,7 +58,7 @@ IP
 		s => sub {
 			my ($params) = @_;
 			s => <<IP
-			\$info{s} = \$sublevel || '';
+			\$info{s} = \$stream || '';
 IP
 		},
 		n => sub {
@@ -307,7 +307,7 @@ ML
 	}
 	my $formatter = <<FMT;
 	sub {
-		my (\$level, \$sublevel, \$message) = \@_;
+		my (\$level, \$stream, \$message) = \@_;
 		my \%info;
 		$code
 		$line;

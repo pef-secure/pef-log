@@ -25,8 +25,8 @@ sub reload {
 }
 
 sub append {
-	my ($self, $level, $sublevel, $msg) = @_;
-	my $line = $self->SUPER::append($level, $sublevel, $msg);
+	my ($self, $level, $stream, $msg) = @_;
+	my $line = $self->SUPER::append($level, $stream, $msg);
 	utf8::encode($line) if utf8::is_utf8($line);
 	my $fh = $self->{fh};
 	$fh->print($line);

@@ -20,7 +20,7 @@ sub formatter {
 		$formatter = PEF::Log::Format::Pattern->formatter({format => $params->{format}});
 	} else {
 		$formatter = sub {
-			my ($level, $sublevel, $message) = @_;
+			my ($level, $stream, $message) = @_;
 			"[$level]: $message";
 		};
 	}
@@ -34,11 +34,11 @@ sub formatter {
 	}
 	state $prefix = "PEF::Log::Format::Flags::";
 	return bless sub {
-		my ($level, $sublevel, $message) = @_;
+		my ($level, $stream, $message) = @_;
 		my $msg;
 		my $json_encoded;
 		if ($formatter) {
-			$msg = $formatter->($level, $sublevel, $message);
+			$msg = $formatter->($level, $stream, $message);
 			$json_encoded = 0;
 		} else {
 			no warnings 'once';
@@ -53,9 +53,9 @@ sub formatter {
 				my @flags = split /:/, substr ($bf, length $prefix);
 				$json_encoded = (grep { $_ eq 'JSON' } @flags) ? 1 : 0;
 			}
-			$msg = $container_formatter->($level, $sublevel, $message);
+			$msg = $container_formatter->($level, $stream, $message);
 		}
-		my $tag = $tag->($level, $sublevel, $message);
+		my $tag = $tag->($level, $stream, $message);
 		my $ret;
 		if ($json_encoded) {
 			$ret = "[" . $value_dumper->stringify($tag) . "," . time . ",$msg]";

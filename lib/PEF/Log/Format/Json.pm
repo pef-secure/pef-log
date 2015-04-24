@@ -13,7 +13,7 @@ sub formatter {
 	$json->pretty(1) if not exists $params->{pretty} or not $params->{pretty};
 	my $need_nl = $params->{need_nl} || '';
 	return bless sub {
-		my ($level, $sublevel, $message) = @_;
+		my ($level, $stream, $message) = @_;
 		$message = {message => $message} if not ref $message;
 		no warnings 'once';
 		local *UNIVERSAL::TO_JSON = sub {

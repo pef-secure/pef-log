@@ -11,7 +11,7 @@ PEF::Log - Logging framework for Perl
    
    --or--
    
-   use PEF::Log (sublevels => [qw(start input output flesh)];
+   use PEF::Log (streams => [qw(start input output flesh)];
    PEF::Log->init(file => "log-config.yaml");
    
    logit debug::start {"started program"} info::start {"everything is ok"};
@@ -83,7 +83,7 @@ Message routing can depend on context, subroutine or package.
 
 =item *
 
-Logging levels can possess sublevels for precise control of logging behavior
+Logging levels can possess streams for precise control of logging behavior
 of different application parts.  
 
 =item *

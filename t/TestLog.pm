@@ -6,7 +6,7 @@ sub new {
 }
 
 sub transform {
-	my ($self, $level, $sublevel, $msg) = @_;
+	my ($self, $level, $stream, $msg) = @_;
 	if ('HASH' eq ref $msg) {
 		$msg->{level} = $level;
 	}

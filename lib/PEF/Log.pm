@@ -38,12 +38,12 @@ BEGIN {
 
 sub import {
 	my ($class, @args) = @_;
-	my ($sln, $sublevels);
+	my ($sln, $streams);
 	for (my $i = 0 ; $i < @args ; ++$i) {
-		if ($args[$i] eq 'sublevels') {
-			($sln, $sublevels) = splice @args, $i, 2;
+		if ($args[$i] eq 'streams') {
+			($sln, $streams) = splice @args, $i, 2;
 			--$i;
-			$sublevels = [$sublevels] if 'ARRAY' ne ref $sublevels;
+			$streams = [$streams] if 'ARRAY' ne ref $streams;
 		} elsif ($args[$i] eq 'main_context') {
 			my (undef, $mctx) = splice @args, $i, 2;
 			--$i;
@@ -55,7 +55,7 @@ sub import {
 		}
 	}
 	if ($sln) {
-		PEF::Log::Levels->import($sln, $sublevels);
+		PEF::Log::Levels->import($sln, $streams);
 	} else {
 		PEF::Log::Levels->import();
 	}
@@ -135,7 +135,7 @@ sub popcontext ($) {
 }
 
 sub _route {
-	my ($level, $sublevel) = @_;
+	my ($level, $stream) = @_;
 	my $routes = $PEF::Log::Config::config{routes};
 	my $context;
 	my $subroutine;
@@ -176,9 +176,9 @@ sub _route {
 	my $apnd = [];
 	my $lvlsub;
 	my $dotsub;
-	if ($sublevel) {
-		$lvlsub = "$level.$sublevel";
-		$dotsub = ".$sublevel";
+	if ($stream) {
+		$lvlsub = "$level.$stream";
+		$dotsub = ".$stream";
 	}
 	my $apnd_check = sub {
 		if (not ref $apnd) {
@@ -190,7 +190,7 @@ sub _route {
 		}
 	};
 	for my $opts (@scd) {
-		if ($sublevel) {
+		if ($stream) {
 			if (exists $opts->{$lvlsub}) {
 				$apnd = $opts->{$lvlsub};
 				$apnd_check->();
@@ -225,8 +225,8 @@ sub logit {
 			$msg = PEF::Log::Levels::warning { {"unknown msg level" => $blt, message => $msg} };
 			$blt = blessed $msg;
 		}
-		my ($level, $sublevel) = split /::/, substr ($blt, length $lvl_prefix);
-		my $appenders = _route($level, $sublevel);
+		my ($level, $stream) = split /::/, substr ($blt, length $lvl_prefix);
+		my $appenders = _route($level, $stream);
 		return if !@$appenders;
 		my @mval;
 		my $got_messages = 0;
@@ -240,7 +240,7 @@ sub logit {
 					@mval         = $msg->();
 				}
 				for my $omv (@mval) {
-					$PEF::Log::Config::config{appenders}{$ap}->append($level, $sublevel, $omv);
+					$PEF::Log::Config::config{appenders}{$ap}->append($level, $stream, $omv);
 				}
 			}
 		}

@@ -7,7 +7,7 @@ sub formatter {
 	my $dumper = Data::Dumper->new([]);
 	$dumper->Terse(1)->Deepcopy(1);
 	return sub {
-		my ($level, $sublevel, $message) = @_;
+		my ($level, $stream, $message) = @_;
 		$message = {message => $message} if not ref $message;
 		$dumper->Values([$message]);
 		$dumper->Dump;

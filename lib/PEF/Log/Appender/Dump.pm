@@ -26,17 +26,17 @@ sub reload {
 }
 
 sub append {
-	my ($self, $level, $sublevel, $msg) = @_;
-	my $fname = $self->{out_formatter}->($level, $sublevel, $msg);
+	my ($self, $level, $stream, $msg) = @_;
+	my $fname = $self->{out_formatter}->($level, $stream, $msg);
 	my ($name, $path, $suffix) = fileparse($fname, q|\.[^\.]*|);
 	if (!-d $path) {
 		make_path $path or croak "can't create path $path: $!";
 	}
 	open my $fh, ">>", $fname or croak "can't open output file $fname: $!";
 	binmode $fh;
-	my $cut = $self->{cut_line_formatter}->($level, $sublevel, $msg);
+	my $cut = $self->{cut_line_formatter}->($level, $stream, $msg);
 	utf8::encode($cut) if utf8::is_utf8($cut);
-	my $line = $self->SUPER::append($level, $sublevel, $msg);
+	my $line = $self->SUPER::append($level, $stream, $msg);
 	utf8::encode($line) if utf8::is_utf8($line);
 	print $fh $cut . $line;
 	close $fh;

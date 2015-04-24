@@ -11,7 +11,7 @@ PEF::Log - Logging framework for Perl
    
    --or--
    
-   use PEF::Log (sublevels => [qw(start input output flesh)];
+   use PEF::Log (streams => [qw(start input output flesh)];
    PEF::Log->init(file => "log-config.yaml");
    
    logit debug::start {"started program"} info::start {"everything is ok"};
@@ -83,7 +83,7 @@ Message routing can depend on context, subroutine or package.
 
 =item *
 
-Logging levels can possess sublevels for precise control of logging behavior
+Logging levels can possess streams for precise control of logging behavior
 of different application parts.  
 
 =item *
@@ -107,9 +107,9 @@ First, it must be initialized in your application startup code.
    use PEF::Log;
    PEF::Log->init(file => "log-config.yaml");
 
-To use sublevels, they must be passed as import arguments to PEF::Log:
+To use streams, they must be passed as import arguments to PEF::Log:
 
-   use PEF::Log (sublevels => [qw(start input output flesh)];
+   use PEF::Log (streams => [qw(start input output flesh)];
    PEF::Log->init(file => "log-config.yaml");
 
 Config file must be in YAML format. You can also use C<plain_config> parameter
@@ -125,8 +125,8 @@ passing them through one of the B<level-functions>, such as: C<debug>,
 C<info>, C<warning>, C<error>, C<critical>, C<fatal> and C<deadly>, which are
 also exported. C<deadly> means "log and die". It flushes open appenders and dies.
 
-With defined sublevels every of B<level-functions> is multiplicated by every 
-sublevel, e.g.: C<debug::start>, C<debug::input>, C<debug::output>, 
+With defined streams every of B<level-functions> is multiplicated by every 
+stream, e.g.: C<debug::start>, C<debug::input>, C<debug::output>, 
 C<debug::flesh>, and so on.
 
 B<Level-functions> accepts code block as it first argument. Code blocks are 
@@ -281,13 +281,13 @@ C<PEF::Log::Stringify::DumpAll> used.
 This section defines how to select appenders for the logging message.
 There're four subsections and they are looked in this order through: 
 B<subroutine>, B<context>, B<package>, B<default>. When logging level 
-with possible sublevel is found then found appenders are used.
+with possible stream is found then found appenders are used.
 
    default:
      warning: screen
      error: [screen, file-err]
 
-It's possible to customize logging levels with sublevels.
+It's possible to customize logging levels with streams.
 
    default:
      warning: screen
@@ -296,7 +296,7 @@ It's possible to customize logging levels with sublevels.
      debug.dump: [dumper, file-debug]
 
 When no other sections found, then B<default> is used. Every debug level
-message will go into B<file-debug> appender except one's with sublevel 
+message will go into B<file-debug> appender except one's with stream 
 B<dump>, they will go in to appenders B<dumper> and B<file-debug>.
 
 =back
@@ -314,7 +314,7 @@ replaced by the logging engine when it's time to log the message:
    %d Current date in %y.%m.%d %H:%M:%S format
    %d{...} Current date in customized format
    %l Level of the message to be logged
-   %s Sublevel of the message to be logged
+   %s Stream of the message to be logged
    %n New line
    %m Stringified message to be logged
    %m{} Key value(s) of message to be logged

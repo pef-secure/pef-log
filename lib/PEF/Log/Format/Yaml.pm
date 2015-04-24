@@ -5,8 +5,8 @@ use warnings;
 
 sub formatter {
 	return sub {
-		my ($level, $sublevel, $message) = @_;
-		$message = {message => $message} if not ref $message;
+		my ($level, $stream, $message) = @_;
+		$message = [$message] if not ref $message;
 		Dump $message;
 	};
 }

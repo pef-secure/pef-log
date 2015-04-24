@@ -32,8 +32,8 @@ sub out {
 }
 
 sub append {
-	my ($self, $level, $sublevel, $msg) = @_;
-	my $line = $self->SUPER::append($level, $sublevel, $msg);
+	my ($self, $level, $stream, $msg) = @_;
+	my $line = $self->SUPER::append($level, $stream, $msg);
 	${$self->{out}} .= $line;
 }
 

@@ -33,12 +33,12 @@ sub _reload {
 }
 
 sub append {
-	my ($self, $level, $sublevel, $msg) = @_;
+	my ($self, $level, $stream, $msg) = @_;
 	if ($self->{filter}) {
-		$msg = $self->{filter}->transform($level, $sublevel, clone $msg);
+		$msg = $self->{filter}->transform($level, $stream, clone $msg);
 	}
 	if ($self->{formatter}) {
-		return $self->{formatter}->($level, $sublevel, $msg);
+		return $self->{formatter}->($level, $stream, $msg);
 	}
 	$msg;
 }

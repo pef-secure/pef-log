@@ -69,12 +69,12 @@ sub formatter {
 		$make_fmt->();
 	}
 	return bless sub {
-		my ($level, $sublevel, $message) = @_;
+		my ($level, $stream, $message) = @_;
 		my $gelf = {
 			version   => "1.1",
 			timestamp => time,
 			level     => $level_map{$level},
-			map { $_ => $formatters{$_}->($level, $sublevel, $message) } keys %formatters
+			map { $_ => $formatters{$_}->($level, $stream, $message) } keys %formatters
 		};
 		encode_json $gelf;
 	}, "PEF::Log::Format::Flags::JSON:GELF";

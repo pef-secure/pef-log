@@ -2,7 +2,7 @@ use FindBin qw($Bin);
 use lib "$Bin/../lib";
 use JSON;
 use Test::More;
-use PEF::Log (sublevels => [qw(input output subroutine)]);
+use PEF::Log (streams => [qw(input output subroutine)]);
 PEF::Log->init(plain_config => <<CFG);
 ---
 appenders:
@@ -19,7 +19,7 @@ appenders:
     format: line-level
     class: string
   string-error:
-    format: line-level-sublevel
+    format: line-level-stream
     class: string
   string-critical:
     format: line-multi
@@ -42,7 +42,7 @@ formats:
     format: "%l: %m"
     stringify: dumpAll
     class: pattern
-  line-level-sublevel:
+  line-level-stream:
     format: "%l.%s: %m"
     stringify: dumpAll
     class: pattern

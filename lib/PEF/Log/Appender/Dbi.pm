@@ -57,7 +57,7 @@ sub reload {
 	my $std_header = '';
 	if ($self->{filter}) {
 		$std_header .= <<PA
-		\$msg = \$self->{filter}->transform(\$level, \$sublevel, clone \$msg);
+		\$msg = \$self->{filter}->transform(\$level, \$stream, clone \$msg);
 PA
 	}
 	$std_header .= <<HS;
@@ -178,14 +178,14 @@ NR
 }
 
 sub append {
-	my ($self, $level, $sublevel, $msg) = @_;
+	my ($self, $level, $stream, $msg) = @_;
 	if (!$self->{parts}{newrow}) {
 		$self->connector($self->{connector});
 	}
 	if (!$self->{append}) {
 		my $sub = <<APP;
 		sub {
-			my (\$self, \$level, \$sublevel, \$msg) = \@_;
+			my (\$self, \$level, \$stream, \$msg) = \@_;
 			$self->{parts}{header}
 			$self->{parts}{newrow}
 		}
@@ -193,7 +193,7 @@ APP
 		$self->{append} = eval $sub;
 		warn $@ if $@;
 	}
-	$self->{append}->($self, $level, $sublevel, $msg);
+	$self->{append}->($self, $level, $stream, $msg);
 }
 
 1;

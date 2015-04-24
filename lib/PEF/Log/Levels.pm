@@ -15,22 +15,22 @@ our @EXPORT = qw(
   deadly
 );
 
-our @sublevels;
+our @streams;
 
 sub import {
 	my ($class, @args) = @_;
 	for (my $i = 0 ; $i < @args ; ++$i) {
-		if ($args[$i] eq 'sublevels') {
+		if ($args[$i] eq 'streams') {
 			my (undef, $sl) = splice @args, $i, 2;
 			--$i;
 			$sl = [$sl] if 'ARRAY' ne ref $sl;
-			@sublevels = @$sl;
+			@streams = @$sl;
 		}
 	}
-	if (@sublevels) {
+	if (@streams) {
 		state $sldone = 0;
 		if (!$sldone) {
-			for my $sl (@sublevels) {
+			for my $sl (@streams) {
 				for my $l (@EXPORT) {
 					eval <<SL;
 	sub ${l}::${sl} (&\@) {
