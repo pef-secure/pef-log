@@ -5,6 +5,7 @@ use Carp;
 use Time::HiRes qw(time);
 use PEF::Log::Config;
 use PEF::Log::Levels ();
+use PEF::Log::ContextStack;
 use Scalar::Util qw(weaken blessed reftype);
 use base 'Exporter';
 use feature 'state';
@@ -17,23 +18,26 @@ our @EXPORT = qw{
   logcontext
   logit
   logstore
+  logswitchstack
 };
 
 our $start_time;
 our $last_log_event;
 our $caller_offset;
-our @context;
-our @context_stash;
+our %context_map;
 our %stash;
+our $current_context_stack;
+our $main_context_name;
 our $routes_default_name;
 
 BEGIN {
-	$start_time          = time;
-	$last_log_event      = 0;
-	@context             = (\"main");
-	@context_stash       = ({});
-	$caller_offset       = 0;
-	$routes_default_name = 'default';
+	$start_time            = time;
+	$last_log_event        = 0;
+	$current_context_stack = "default";
+	%context_map           = (default => [\$main_context_name, PEF::Log::ContextStack->new()]);
+	$caller_offset         = 0;
+	$main_context_name     = "main";
+	$routes_default_name   = 'default';
 }
 
 sub import {
@@ -45,9 +49,9 @@ sub import {
 			--$i;
 			$streams = [$streams] if 'ARRAY' ne ref $streams;
 		} elsif ($args[$i] eq 'main_context') {
-			my (undef, $mctx) = splice @args, $i, 2;
+			my (undef, $main_context_name) = splice @args, $i, 2;
 			--$i;
-			$context[0] = \$mctx;
+			%context_map = (default => [\$main_context_name, PEF::Log::ContextStack->new($main_context_name)]);
 		} elsif ($args[$i] eq 'routes_default') {
 			my (undef, $rdf) = splice @args, $i, 2;
 			--$i;
@@ -88,49 +92,53 @@ sub logstore {
 	}
 }
 
-sub _clean_context {
-	pop @context while @context and not defined $context[-1];
-	splice @context_stash, scalar @context;
-}
-
 sub logcache {
-	_clean_context;
-	my $cache = $context_stash[-1];
-	if (@_ == 1) {
-		return $cache->{$_[0]} if exists $cache->{$_[0]};
-		for (my $i = $#context_stash - 1 ; $i > -1 ; --$i) {
-			$cache = $context_stash[$i];
-			return $cache->{$_[0]} if exists $cache->{$_[0]};
-		}
-		return;
-	} elsif (@_ == 0) {
-		$cache;
-	} else {
-		$cache->{$_[0]} = $_[1];
+	if (not defined $context_map{$current_context_stack}->[0]) {
+		delete $context_map{$current_context_stack};
+		$current_context_stack = "default";
 	}
+	$context_map{$current_context_stack}->[1]->cache(@_);
 }
 
 sub logcontext {
-	_clean_context;
-	if (@_) {
-		carp "not scalar reference" if 'SCALAR' ne ref $_[0];
-		push @context, $_[0];
-		weaken($context[-1]);
-		push @context_stash, {};
-		return ${$context[-1]} if defined wantarray;
-	} else {
-		${$context[-1]};
+	if (not defined $context_map{$current_context_stack}->[0]) {
+		delete $context_map{$current_context_stack};
+		$current_context_stack = "default";
 	}
+	$context_map{$current_context_stack}->[1]->context(@_);
 }
 
 sub popcontext ($) {
-	_clean_context;
-	for (my $i = @context - 1 ; $i > 0 ; --$i) {
-		if (${$context[$i]} eq $_[0]) {
-			splice @context,       $i;
-			splice @context_stash, $i;
-			last;
+	if (not defined $context_map{$current_context_stack}->[0]) {
+		delete $context_map{$current_context_stack};
+		$current_context_stack = "default";
+	}
+	$context_map{$current_context_stack}->[1]->pop(@_);
+}
+
+sub logswitchstack {
+	return if not @_;
+	my $defctx = $_[1] // $main_context_name;
+	if (ref $_[0]) {
+		if ('SCALAR' eq ref $_[0]) {
+			unless (exists ($context_map{${$_[0]}}) && defined $context_map{${$_[0]}}[0]) {
+				$context_map{${$_[0]}} = [$_[0], PEF::Log::ContextStack->new($defctx)];
+				weaken $context_map{${$_[0]}}[0];
+				# auto clean
+				my ($key, $value);
+				while (($key, $value) = each %context_map) {
+					delete $context_map{$key} if not defined $value->[0];
+				}
+			}
+			$current_context_stack = ${$_[0]};
+		} else {
+			carp "unknown bind variable type: " . ref $_[0];
 		}
+	} else {
+		unless (exists ($context_map{$_[0]}) && defined $context_map{$_[0]}[0]) {
+			$context_map{$_[0]} = [\$_[0], PEF::Log::ContextStack->new($defctx)];
+		}
+		$current_context_stack = $_[0];
 	}
 }
 
