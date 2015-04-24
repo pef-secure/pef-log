@@ -97,7 +97,12 @@ sub logcache {
 	_clean_context;
 	my $cache = $context_stash[-1];
 	if (@_ == 1) {
-		$cache->{$_[0]};
+		return $cache->{$_[0]} if exists $cache->{$_[0]};
+		for (my $i = $#context_stash - 1 ; $i > -1 ; --$i) {
+			$cache = $context_stash[$i];
+			return $cache->{$_[0]} if exists $cache->{$_[0]};
+		}
+		return;
 	} elsif (@_ == 0) {
 		$cache;
 	} else {
