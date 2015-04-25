@@ -6,7 +6,7 @@ use Time::HiRes qw(time);
 use PEF::Log::Config;
 use PEF::Log::Levels ();
 use PEF::Log::ContextStack;
-use Scalar::Util qw(weaken blessed reftype);
+use Scalar::Util qw(weaken blessed reftype isweak);
 use base 'Exporter';
 use feature 'state';
 
@@ -26,18 +26,20 @@ our $last_log_event;
 our $caller_offset;
 our %context_map;
 our %stash;
-our $current_context_stack;
+our $current_stack;
+our $current_stack_nwr;
 our $main_context_name;
 our $routes_default_name;
 
 BEGIN {
-	$start_time            = time;
-	$last_log_event        = 0;
-	$current_context_stack = "default";
-	%context_map           = (default => [\$main_context_name, PEF::Log::ContextStack->new()]);
-	$caller_offset         = 0;
-	$main_context_name     = "main";
-	$routes_default_name   = 'default';
+	$start_time          = time;
+	$last_log_event      = 0;
+	$main_context_name   = "main";
+	$current_stack_nwr   = \$main_context_name;
+	%context_map         = (default => [\$main_context_name, PEF::Log::ContextStack->new($main_context_name)]);
+	$current_stack       = $context_map{default}[1];
+	$caller_offset       = 0;
+	$routes_default_name = 'default';
 }
 
 sub import {
@@ -51,7 +53,8 @@ sub import {
 		} elsif ($args[$i] eq 'main_context') {
 			my (undef, $main_context_name) = splice @args, $i, 2;
 			--$i;
-			%context_map = (default => [\$main_context_name, PEF::Log::ContextStack->new($main_context_name)]);
+			$context_map{default}[1] = PEF::Log::ContextStack->new($main_context_name);
+			$current_stack = $context_map{default}[1];
 		} elsif ($args[$i] eq 'routes_default') {
 			my (undef, $rdf) = splice @args, $i, 2;
 			--$i;
@@ -93,27 +96,27 @@ sub logstore {
 }
 
 sub logcache {
-	if (not defined $context_map{$current_context_stack}->[0]) {
-		delete $context_map{$current_context_stack};
-		$current_context_stack = "default";
+	if (not defined $current_stack_nwr) {
+		$current_stack_nwr = $context_map{default}[0];
+		$current_stack     = $context_map{default}[1];
 	}
-	$context_map{$current_context_stack}->[1]->cache(@_);
+	$current_stack->cache(@_);
 }
 
 sub logcontext {
-	if (not defined $context_map{$current_context_stack}->[0]) {
-		delete $context_map{$current_context_stack};
-		$current_context_stack = "default";
+	if (not defined $current_stack_nwr) {
+		$current_stack_nwr = $context_map{default}[0];
+		$current_stack     = $context_map{default}[1];
 	}
-	$context_map{$current_context_stack}->[1]->context(@_);
+	$current_stack->context(@_);
 }
 
 sub popcontext ($) {
-	if (not defined $context_map{$current_context_stack}->[0]) {
-		delete $context_map{$current_context_stack};
-		$current_context_stack = "default";
+	if (not defined $current_stack_nwr) {
+		$current_stack_nwr = $context_map{default}[0];
+		$current_stack     = $context_map{default}[1];
 	}
-	$context_map{$current_context_stack}->[1]->pop(@_);
+	$current_stack->pop(@_);
 }
 
 sub logswitchstack {
@@ -121,16 +124,19 @@ sub logswitchstack {
 	my $defctx = $_[1] // $main_context_name;
 	if (ref $_[0]) {
 		if ('SCALAR' eq ref $_[0]) {
-			unless (exists ($context_map{${$_[0]}}) && defined $context_map{${$_[0]}}[0]) {
+			if (not exists $context_map{${$_[0]}} or not defined $context_map{${$_[0]}}[0]) {
 				$context_map{${$_[0]}} = [$_[0], PEF::Log::ContextStack->new($defctx)];
-				weaken $context_map{${$_[0]}}[0];
-				# auto clean
 				my ($key, $value);
 				while (($key, $value) = each %context_map) {
 					delete $context_map{$key} if not defined $value->[0];
 				}
+			} else {
+				$context_map{${$_[0]}}[0] = $_[0];
 			}
-			$current_context_stack = ${$_[0]};
+			weaken $context_map{${$_[0]}}[0];
+			$current_stack_nwr = $_[0];
+			weaken $current_stack_nwr;
+			$current_stack = $context_map{${$_[0]}}[1];
 		} else {
 			carp "unknown bind variable type: " . ref $_[0];
 		}
@@ -138,7 +144,8 @@ sub logswitchstack {
 		unless (exists ($context_map{$_[0]}) && defined $context_map{$_[0]}[0]) {
 			$context_map{$_[0]} = [\$_[0], PEF::Log::ContextStack->new($defctx)];
 		}
-		$current_context_stack = $_[0];
+		$current_stack_nwr = $context_map{$_[0]}[0];
+		$current_stack     = $context_map{$_[0]}[1];
 	}
 }
 
