@@ -116,7 +116,7 @@ IP
 				"M$params" => <<IP
 				if('HASH' eq ref \$message) {
 					my \%known = ($kl);
-					my \@unknown = grep {not exists \$message->{\$_}} keys \%\$message;
+					my \@unknown = grep {not exists \$known{\$_}} keys \%\$message;
 					\$info{"M$params"} = $stringify->stringify({map { \$_ => \$message->{\$_}} \@unknown});
 				} else {
 					\$info{"M$params"} = '';
@@ -313,6 +313,7 @@ ML
 		$line;
 	}
 FMT
+print $formatter;
 	$formatter;
 }
 

@@ -4,6 +4,7 @@ use warnings;
 use YAML::XS qw(LoadFile Load);
 use Carp;
 use Scalar::Util qw(blessed);
+use PEF::Log::OverAppender;
 
 our @reload_watchers;
 our %config;
@@ -48,6 +49,22 @@ sub _reload_appenders {
 			}
 			$config{appenders}{$ap} = "$name"->new(%$conf);
 		}
+	}
+}
+
+sub _reload_overs {
+	my %config_overs;
+	if (exists $config{file}{overs}) {
+		%config_overs = %{$config{file}{overs}};
+	}
+	if (exists $config{text}{overs}) {
+		my @keys = keys %{$config{text}{overs}};
+		@config_overs{@keys} = values %{$config{text}{overs}};
+	}
+	for my $ap (keys %config_overs) {
+		my $appc = $config_overs{$ap};
+		my $conf = 'HASH' eq ref ($appc) ? $appc : {};
+		$config{appenders}{$ap} = PEF::Log::OverAppender->new(%$conf);
 	}
 }
 
@@ -129,6 +146,7 @@ sub reload {
 	if ($reload) {
 		_reload_formats();
 		_reload_appenders();
+		_reload_overs();
 		_reload_routes();
 	}
 }
