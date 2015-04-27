@@ -63,7 +63,13 @@ logstore application => "test-application";
 
 logit info { "test message" };
 
-like($string{"string-info"}, qr/\["info",\d+\.\d+,"test message"\]/, 'fluentd - simple message');
+my $flm = decode_json $string{"string-info"};
+ok( $flm->[0] eq "info"
+	  && $flm->[1] =~ /^\d+\.\d+$/
+	  && $flm->[2]{full_message} eq 'test message'
+	  && $flm->[2]{level} eq 'info',
+	'fluentd - simple message'
+);
 $string{"string-info"} = '';
 logit debug { {user => "molly", parent => "holly", message => "your guess"} };
 my $flc = decode_json $string{"string-debug"};

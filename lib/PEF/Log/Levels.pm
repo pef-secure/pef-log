@@ -17,6 +17,39 @@ our @EXPORT = qw(
 
 our @streams;
 
+sub set_special {
+	my ($msg, $special) = @_;
+	state $lvl_prefix = "PEF::Log::Levels";
+	my $blt = blessed $msg;
+	if (not $blt) {
+		$msg = PEF::Log::Levels::warning { {"not blessed message" => $msg} };
+		$blt = blessed $msg;
+	}
+	if (substr ($blt, 0, length $lvl_prefix) ne $lvl_prefix) {
+		$msg = PEF::Log::Levels::warning { {"unknown msg level" => $blt, message => $msg} };
+		$blt = blessed $msg;
+	}
+	my ($level, $stream) = split /::/, substr ($blt, 2 + length $lvl_prefix);
+	bless $_[0], join "::", $lvl_prefix, $level, $stream, $special;
+	$msg;
+}
+
+sub make_stream {
+	my ($stream) = @_;
+	no strict 'refs';
+	if (not defined &{"debug::$stream"}) {
+		for my $l (@EXPORT) {
+			eval <<SL;
+	sub ${l}::${stream} (&\@) {
+		bless \$_[0], "PEF::Log::Levels::${l}::$stream"; 
+		\@_ 
+	}
+SL
+		}
+
+	}
+}
+
 sub import {
 	my ($class, @args) = @_;
 	for (my $i = 0 ; $i < @args ; ++$i) {
@@ -31,14 +64,7 @@ sub import {
 		state $sldone = 0;
 		if (!$sldone) {
 			for my $sl (@streams) {
-				for my $l (@EXPORT) {
-					eval <<SL;
-	sub ${l}::${sl} (&\@) {
-		bless \$_[0], "PEF::Log::Levels::${l}::$sl"; 
-		\@_ 
-	}
-SL
-				}
+				make_stream($sl);
 			}
 		}
 		$sldone = 1;

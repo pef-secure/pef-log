@@ -30,6 +30,7 @@ our $current_stack;
 our $current_stack_nwr;
 our $main_context_name;
 our $routes_default_name;
+our @error_queue;
 
 BEGIN {
 	$start_time          = time;
@@ -149,6 +150,82 @@ sub logswitchstack {
 	}
 }
 
+sub logit {
+	state $lvl_prefix = "PEF::Log::Levels::";
+	my $log_count = 0;
+	for (my $imsg = 0 ; $imsg < @_ ; ++$imsg) {
+		unshift @_, @error_queue;
+		@error_queue = ();
+		my $msg = $_[$imsg];
+		my $blt = blessed $msg;
+		if (not $blt) {
+			$msg = PEF::Log::Levels::warning { {"not blessed message" => $msg} };
+			$blt = blessed $msg;
+		}
+		if (substr ($blt, 0, length $lvl_prefix) ne $lvl_prefix) {
+			$msg = PEF::Log::Levels::warning { {"unknown msg level" => $blt, message => $msg} };
+			$blt = blessed $msg;
+		}
+		my ($level, $stream, $special) = split /::/, substr ($blt, length $lvl_prefix);
+		my %spc_flags;
+		%spc_flags = map { $_ => undef } split /:/, $special if $special;
+		my $appenders = _route($level, $stream);
+		return if !@$appenders;
+		my @mval;
+		my $got_messages = 0;
+		for my $ap (@$appenders) {
+			if (not exists $PEF::Log::Config::config{appenders}{$ap}) {
+				push @error_queue, PEF::Log::Levels::set_special(
+					(
+						PEF::Log::Levels::error {
+							{   message  => "unknown appender",
+								appender => $ap
+							}
+						}
+					),
+					"once"
+				);
+			} else {
+				if (!$got_messages) {
+					++$log_count;
+					$got_messages = 1;
+					@mval         = $msg->();
+				}
+				for my $omv (@mval) {
+					eval { $PEF::Log::Config::config{appenders}{$ap}->append($level, $stream, $omv); };
+					if ($@ and not exists $spc_flags{once}) {
+						if (ref $@ or $@ !~ /^suppress/) {
+							push @error_queue, PEF::Log::Levels::set_special(
+								(
+									PEF::Log::Levels::error {
+										{   exception => $@,
+											appender  => $ap
+										}
+									}
+								),
+								"once"
+							);
+						}
+					}
+				}
+			}
+		}
+		$last_log_event = time if $got_messages;
+		if ($level eq 'deadly') {
+			my @all_appenders = keys %{$PEF::Log::Config::config{appenders}};
+			for my $ap (@all_appenders) {
+				my $apnd = logappender($ap);
+				if ($apnd->can("final")) {
+					$apnd->final;
+				}
+				delete $PEF::Log::Config::config{appenders}{$ap};
+			}
+			croak "it's time to die";
+		}
+	}
+	$log_count;
+}
+
 sub _route {
 	my ($level, $stream) = @_;
 	my $routes = $PEF::Log::Config::config{routes};
@@ -223,56 +300,6 @@ sub _route {
 		}
 	}
 	$apnd;
-}
-
-sub logit {
-	state $lvl_prefix = "PEF::Log::Levels::";
-	my $log_count    = 0;
-	my $added_errors = 0;
-	for (my $imsg = 0 ; $imsg < @_ ; ++$imsg) {
-		my $msg = $_[$imsg];
-		my $blt = blessed $msg;
-		if (not $blt) {
-			$msg = PEF::Log::Levels::warning { {"not blessed message" => $msg} };
-			$blt = blessed $msg;
-		}
-		if (substr ($blt, 0, length $lvl_prefix) ne $lvl_prefix) {
-			$msg = PEF::Log::Levels::warning { {"unknown msg level" => $blt, message => $msg} };
-			$blt = blessed $msg;
-		}
-		my ($level, $stream) = split /::/, substr ($blt, length $lvl_prefix);
-		my $appenders = _route($level, $stream);
-		return if !@$appenders;
-		my @mval;
-		my $got_messages = 0;
-		for my $ap (@$appenders) {
-			if (not exists $PEF::Log::Config::config{appenders}{$ap}) {
-				push @_, PEF::Log::Levels::error { {"unknown appender" => $ap} } if ++$added_errors < 4;
-			} else {
-				if (!$got_messages) {
-					++$log_count;
-					$got_messages = 1;
-					@mval         = $msg->();
-				}
-				for my $omv (@mval) {
-					$PEF::Log::Config::config{appenders}{$ap}->append($level, $stream, $omv);
-				}
-			}
-		}
-		$last_log_event = time if $got_messages;
-		if ($level eq 'deadly') {
-			my @all_appenders = keys %{$PEF::Log::Config::config{appenders}};
-			for my $ap (@all_appenders) {
-				my $apnd = logappender($ap);
-				if ($apnd->can("final")) {
-					$apnd->final;
-				}
-				delete $PEF::Log::Config::config{appenders}{$ap};
-			}
-			croak "it's time to die";
-		}
-	}
-	$log_count;
 }
 
 1;

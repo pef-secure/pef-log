@@ -130,7 +130,7 @@ IP
 		},
 		caller => sub {
 			<<CALLER
-			my (\$package, undef, \$line) = caller(\$PEF::Log::caller_offset + 3);
+			my (\$package, undef, \$line) = caller(\$PEF::Log::caller_offset + 4);
 			\$info{L} = \$line // '[undef]';
 			\$info{C} = \$package // 'main';
 CALLER
@@ -139,7 +139,7 @@ CALLER
 			T => <<IP
 			{
 				require Carp;
-				local \$Carp::CarpLevel = \$Carp::CarpLevel + \$PEF::Log::caller_offset + 3;
+				local \$Carp::CarpLevel = \$Carp::CarpLevel + \$PEF::Log::caller_offset + 4;
 				my \$mess = Carp::longmess(); 
 				chomp(\$mess);
 				\$mess =~ s/(?:\\A\\s*at.*\\n|^\\s*)//mg;
@@ -171,7 +171,7 @@ IP
 			my ($params) = @_;
 			S => <<IP
 			my \$subroutine;
-			for(my \$stlvl = 4;;++\$stlvl) {
+			for(my \$stlvl = 5;;++\$stlvl) {
 				my \@caller = caller(\$PEF::Log::caller_offset + \$stlvl);
 				\$subroutine = \$caller[3];
 				last if not defined \$subroutine;
