@@ -19,7 +19,7 @@ sub reload {
 	my ($self, $params) = @_;
 	$self->_reload($params);
 	my $out = $params->{out} or croak "no output socket";
-	$self->_final if $$ != $self->{owner_pid};
+	$self->final if $$ != $self->{owner_pid};
 	return $self if exists $self->{sock} and $self->{sock} and $out eq $self->{out};
 	$self->{out} = $out;
 	my ($scheme, $authority, $path, $query, $fragment) =
@@ -67,7 +67,7 @@ sub reload {
 sub _reconnect {
 	my ($self, $params) = @_;
 	my $socket_class = $self->{socket_class};
-	$self->_final;
+	$self->final;
 	$self->{sock} = "$socket_class"->new(@{$self->{socket_params}})
 	  or croak "can't connect to $self->{out}: $!";
 	$self->{owner_pid} = $$;
@@ -101,7 +101,7 @@ sub append {
 	}
 }
 
-sub _final {
+sub final {
 	if ($_[0]->{sock}) {
 		close $_[0]->{sock};
 		undef $_[0]->{sock};
@@ -109,7 +109,7 @@ sub _final {
 }
 
 sub DESTROY {
-	$_[0]->_final;
+	$_[0]->final;
 }
 
 1;
