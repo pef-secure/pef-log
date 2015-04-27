@@ -313,7 +313,6 @@ ML
 		$line;
 	}
 FMT
-print $formatter;
 	$formatter;
 }
 
