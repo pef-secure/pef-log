@@ -61,7 +61,7 @@ sub formatter {
 			$ret = encode_json [$tag, time, decode_json $msg];
 		} else {
 			$msg =~ s/\n$//s;
-			$ret = encode_json [$tag, time, {message => $msg}];
+			$ret = encode_json [$tag, time, {full_message => $msg, level => $level}];
 		}
 		$ret . "\n";
 	}, "PEF::Log::Format::Flags::JSON:Fluentd";
