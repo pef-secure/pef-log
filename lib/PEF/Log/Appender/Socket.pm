@@ -47,7 +47,7 @@ sub reload {
 			Proto    => 'tcp',
 		);
 		$socket_class = "IO::Socket::INET";
-	} elsif ($scheme eq 'local') {
+	} elsif ($scheme eq 'udp') {
 		@socket_params = (
 			Timeout => $params->{timeout} || 3,
 			Type => SOCK_DGRAM,
