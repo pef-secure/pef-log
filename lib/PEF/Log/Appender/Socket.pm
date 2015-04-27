@@ -67,7 +67,7 @@ sub reload {
 sub _reconnect {
 	my ($self, $params) = @_;
 	my $socket_class = $self->{socket_class};
-	$self->final;
+	$self->_final;
 	$self->{sock} = "$socket_class"->new(@{$self->{socket_params}})
 	  or croak "can't connect to $self->{out}: $!";
 	$self->{owner_pid} = $$;
@@ -101,7 +101,7 @@ sub append {
 	}
 }
 
-sub final {
+sub _final {
 	if ($_[0]->{sock}) {
 		close $_[0]->{sock};
 		undef $_[0]->{sock};
@@ -109,7 +109,7 @@ sub final {
 }
 
 sub DESTROY {
-	$_[0]->final;
+	$_[0]->_final;
 }
 
 1;
