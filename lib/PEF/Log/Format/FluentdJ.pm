@@ -21,7 +21,11 @@ sub formatter {
 	} else {
 		$formatter = sub {
 			my ($level, $stream, $message) = @_;
-			"[$level]: $message";
+			if ('HASH' eq ref $message) {
+				$message;
+			} else {
+				"[$level]: $message";
+			}
 		};
 	}
 	my $tag_format = $params->{tag} || "%l";
@@ -59,6 +63,8 @@ sub formatter {
 		my $ret;
 		if ($json_encoded) {
 			$ret = encode_json [$tag, time, decode_json $msg];
+		} elsif('HASH' eq ref $msg) {
+			$ret = encode_json [$tag, time, $msg];
 		} else {
 			$msg =~ s/\n$//s;
 			$ret = encode_json [$tag, time, {full_message => $msg, level => $level}];
