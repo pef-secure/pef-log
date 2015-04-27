@@ -57,12 +57,13 @@ sub formatter {
 		}
 		my $tag = $tag->($level, $stream, $message);
 		my $ret;
+		$msg =~ s/\n$//s;
 #		if ($json_encoded) {
 #			$ret = "[" . $value_dumper->stringify($tag) . "," . time . ",$msg]";
 #		} else {
 			$ret = encode_json [$tag, time, $msg];
 #		}
-		$ret;
+		$ret . "\n";
 	}, "PEF::Log::Format::Flags::JSON:Fluentd";
 }
 
