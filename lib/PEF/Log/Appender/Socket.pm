@@ -67,7 +67,7 @@ sub reload {
 sub _reconnect {
 	my ($self, $params) = @_;
 	my $socket_class = $self->{socket_class};
-	$self->_final;
+	$self->final;
 	$self->{sock} = "$socket_class"->new(@{$self->{socket_params}})
 	  or croak "can't connect to $self->{out}: $!";
 	$self->{owner_pid} = $$;
