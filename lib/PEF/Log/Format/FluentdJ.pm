@@ -36,6 +36,7 @@ sub formatter {
 	} else {
 		$tag = sub { $params->{tag} };
 	}
+	my $message_key = $params->{message_key} || 'message';
 	state $prefix = "PEF::Log::Format::Flags::";
 	return bless sub {
 		my ($level, $stream, $message) = @_;
@@ -62,12 +63,12 @@ sub formatter {
 		my $tag = $tag->($level, $stream, $message);
 		my $ret;
 		if ($json_encoded) {
-			$ret = encode_json [$tag, time, decode_json $msg];
+			$ret = qq{["$tag", } . time . ", $msg]";
 		} elsif('HASH' eq ref $msg) {
 			$ret = encode_json [$tag, time, $msg];
 		} else {
 			$msg =~ s/\n$//s;
-			$ret = encode_json [$tag, time, {full_message => $msg, level => $level}];
+			$ret = encode_json [$tag, time, {$message_key => $msg, level => $level}];
 		}
 		$ret . "\n";
 	}, "PEF::Log::Format::Flags::JSON:Fluentd";
