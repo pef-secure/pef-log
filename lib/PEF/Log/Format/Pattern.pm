@@ -130,10 +130,10 @@ IP
 		},
 		caller => sub {
 			<<CALLER
-			my (\$package, undef, \$line, \$offset);
-			\$offset = 4;
+			my (\$package, undef, \$line, \$coffset);
+			\$coffset = 4;
 			while(1) {
-				(\$package, undef, \$line, \$offset) = caller(\$PEF::Log::caller_offset + \$offset++);
+				(\$package, undef, \$line, \$offset) = caller(\$PEF::Log::caller_offset + \$coffset++);
 				last if \$package !~ /^PEF::Log/;
 			}
 			\$info{L} = \$line // '[undef]';
