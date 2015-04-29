@@ -62,11 +62,10 @@ logcache user        => "test user";
 logstore application => "test-application";
 
 logit info { "test message" };
-
 my $flm = decode_json $string{"string-info"};
 ok( $flm->[0] eq "info"
 	  && $flm->[1] =~ /^\d+\.\d+$/
-	  && $flm->[2]{full_message} eq 'test message'
+	  && $flm->[2]{message} eq 'test message'
 	  && $flm->[2]{level} eq 'info',
 	'fluentd - simple message'
 );
