@@ -181,7 +181,7 @@ IP
 				\$subroutine = \$caller[3];
 				last if not defined \$subroutine;
 				\$subroutine =~ s/.*:://;
-				last if \$subroutine ne '(eval)' and \$subroutine ne '__ANON__'; 
+				last if \$subroutine ne 'logit' and \$subroutine ne '(eval)' and \$subroutine ne '__ANON__'; 
 			}
 			\$info{S} = \$subroutine // '/unknown/';
 IP
