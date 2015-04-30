@@ -36,7 +36,7 @@ APS
 	}
 	$app_sub .= <<APS;
 		my \$of = \$PEF::Log::caller_offset;
-		local \$PEF::Log::caller_offset = \$of + 1;
+		local \$PEF::Log::caller_offset = \$of + 2;
 		\$self->{appender}->append(\$level, \$stream, \$msg);
 	}
 APS
