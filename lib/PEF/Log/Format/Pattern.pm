@@ -130,12 +130,7 @@ IP
 		},
 		caller => sub {
 			<<CALLER
-			my (\$package, undef, \$line, \$coffset);
-			\$coffset = 4;
-			while(1) {
-				(\$package, undef, \$line) = caller(\$PEF::Log::caller_offset + \$coffset++);
-				last if \$package !~ /^PEF::Log/;
-			}
+			my (\$package, undef, \$line) = caller(\$PEF::Log::caller_offset + 4);
 			\$info{L} = \$line // '[undef]';
 			\$info{C} = \$package // 'main';
 CALLER
@@ -181,7 +176,7 @@ IP
 				\$subroutine = \$caller[3];
 				last if not defined \$subroutine;
 				\$subroutine =~ s/.*:://;
-				last if \$subroutine ne 'logit' and \$subroutine ne '(eval)' and \$subroutine ne '__ANON__'; 
+				last if \$subroutine ne '(eval)' and \$subroutine ne '__ANON__'; 
 			}
 			\$info{S} = \$subroutine // '/unknown/';
 IP
