@@ -30,6 +30,8 @@ sub set_special {
 		$blt = blessed $msg;
 	}
 	my ($level, $stream) = split /::/, substr ($blt, 2 + length $lvl_prefix);
+	$stream  //= '';
+	$special //= '';
 	bless $_[0], join "::", $lvl_prefix, $level, $stream, $special;
 	$msg;
 }
