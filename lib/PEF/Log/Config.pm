@@ -160,7 +160,15 @@ sub reload {
 		$config{text} = $params->{config};
 		$reload = 1;
 	}
-	if ($reload) {
+	for my $r (qw(reload_formats reload_appenders reload_overs reload_routes reload_streams)) {
+		if (exists $params->{$r} and $params->{$r}) {
+			no strict 'refs';
+			my $cref = \&{"PEF::Log::Config::_$r"};
+			$cref->();
+			$reload = 0;
+		}
+	}
+	if ($reload || (exists $params->{reload} and $params->{reload})) {
 		_reload_formats();
 		_reload_appenders();
 		_reload_overs();

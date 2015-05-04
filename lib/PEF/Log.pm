@@ -57,7 +57,13 @@ sub import {
 			--$i;
 			$context_map{default}[1] = PEF::Log::ContextStack->new($main_context_name);
 			$current_stack = $context_map{default}[1];
-		} elsif ($args[$i] eq 'file' || $args[$i] eq 'config' || $args[$i] eq 'plain_config') {
+		} elsif (
+			$args[$i] eq 'file'
+			|| $args[$i] eq 'config'
+			|| $args[$i] eq 'plain_config'
+			|| $args[$i] =~ /^reload/
+		  )
+		{
 			push @config, splice @args, $i, 2;
 			--$i;
 		} elsif ($args[$i] eq 'routes_default') {
