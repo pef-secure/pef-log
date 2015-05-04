@@ -3,17 +3,17 @@ appenders:
   screen:
     out: stderr
     format: line
-  socket:
-    out: unix:///syslog.sock
-    timeout: 10
-  dbi-system:
-    out: test_log
-    filter: changeMe
-    fields: [ip, action, result, comment]
-    skip-not-exists: true
-    skip-undef: true
-    new-row-func: struct_new_row
-    rest: comment
+#  socket:
+#    out: unix:///syslog.sock
+#    timeout: 10
+#  dbi-system:
+#    out: test_log
+#    filter: changeMe
+#    fields: [ip, action, result, comment]
+#    skip-not-exists: true
+#    skip-undef: true
+#    new-row-func: struct_new_row
+#    rest: comment
   dump:
     out: "%G{session}/%C::%S::%x"
     format: yaml
@@ -71,6 +71,8 @@ formats:
     multiline: false
     extra:
       user_id: 1
+  yaml:
+streams: [input, result]
 routes:
   default:
     debug: file-debug
