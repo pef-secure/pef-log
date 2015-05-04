@@ -5,6 +5,7 @@ use YAML::XS qw(LoadFile Load);
 use Carp;
 use Scalar::Util qw(blessed);
 use PEF::Log::OverAppender;
+use PEF::Log::Levels ();
 
 our @reload_watchers;
 our %config;
@@ -116,6 +117,22 @@ sub _reload_routes {
 	$config{routes} = \%config_routes;
 }
 
+sub _reload_streams {
+	my @config_streams;
+	if (exists $config{file}{streams}) {
+		@config_streams =
+		  ('ARRAY' eq ref $config{file}{streams}) ? @{$config{file}{streams}} : ($config{file}{streams});
+	}
+	if (exists $config{text}{streams}) {
+		@config_streams =
+		  ('ARRAY' eq ref $config{text}{streams}) ? @{$config{file}{streams}} : ($config{text}{streams});
+	}
+	$config{streams} = \@config_streams;
+	for my $stream (@config_streams) {
+		PEF::Log::Levels::make_stream($stream);
+	}
+}
+
 sub reload {
 	shift @_ if $_[0] eq __PACKAGE__;
 	my ($params) = @_;
@@ -148,6 +165,7 @@ sub reload {
 		_reload_appenders();
 		_reload_overs();
 		_reload_routes();
+		_reload_streams();
 	}
 }
 
