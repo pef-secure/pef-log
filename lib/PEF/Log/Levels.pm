@@ -1,5 +1,5 @@
 package PEF::Log::Levels;
-use Scalar::Util qw(blessed set_prototype);
+use Scalar::Util qw(blessed);
 use base 'Exporter';
 use strict;
 use warnings;
@@ -47,7 +47,6 @@ sub make_stream {
 		\@_ 
 	}
 SL
-			set_prototype(\&{"debug::$stream"}, "&\@");
 		}
 
 	}

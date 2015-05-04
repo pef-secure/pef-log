@@ -46,6 +46,7 @@ BEGIN {
 sub import {
 	my ($class, @args) = @_;
 	my ($sln, $streams);
+	my @config;
 	for (my $i = 0 ; $i < @args ; ++$i) {
 		if ($args[$i] eq 'streams') {
 			($sln, $streams) = splice @args, $i, 2;
@@ -56,11 +57,22 @@ sub import {
 			--$i;
 			$context_map{default}[1] = PEF::Log::ContextStack->new($main_context_name);
 			$current_stack = $context_map{default}[1];
+		} elsif (
+			grep {
+				$args[$i] eq $_
+			} qw(file config plain_config)
+		  )
+		{
+			push @config, splice @args, $i, 2;
+			--$i;
 		} elsif ($args[$i] eq 'routes_default') {
 			my (undef, $rdf) = splice @args, $i, 2;
 			--$i;
 			$routes_default_name = $rdf;
 		}
+	}
+	if (@config) {
+		PEF::Log::Config::init(@config);
 	}
 	if ($sln) {
 		PEF::Log::Levels->import($sln, $streams);
