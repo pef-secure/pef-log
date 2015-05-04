@@ -172,7 +172,10 @@ sub reload {
 sub init {
 	shift @_ if $_[0] eq __PACKAGE__;
 	my %params = @_;
-	croak "no config" unless exists $params{file} or exists $params{plain_config};
+	croak "no config"
+	  unless exists $params{file}
+	  or exists $params{plain_config}
+	  or exists $params{config};
 	reload(\%params);
 }
 
