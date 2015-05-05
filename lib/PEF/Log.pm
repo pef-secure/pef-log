@@ -57,12 +57,10 @@ sub import {
 			--$i;
 			$context_map{default}[1] = PEF::Log::ContextStack->new($main_context_name);
 			$current_stack = $context_map{default}[1];
-		} elsif (
-			$args[$i] eq 'file'
+		} elsif ($args[$i] eq 'file'
 			|| $args[$i] eq 'config'
 			|| $args[$i] eq 'plain_config'
-			|| $args[$i] =~ /^reload/
-		  )
+			|| $args[$i] =~ /^reload/)
 		{
 			push @config, splice @args, $i, 2;
 			--$i;
@@ -136,6 +134,15 @@ sub popcontext ($) {
 sub logswitchstack {
 	return if not @_;
 	my $defctx = $_[1] // $main_context_name;
+	if (@_ == 2 and not defined $_[1]) {
+		my $csn = (ref $_[0]) ? ${$_[0]} : $_[0];
+		if ($$current_stack_nwr eq $csn) {
+			$current_stack_nwr = $context_map{default}[0];
+			$current_stack     = $context_map{default}[1];
+		}
+		delete $context_map{$csn};
+		return;
+	}
 	if (ref $_[0]) {
 		if ('SCALAR' eq ref $_[0]) {
 			if (not exists $context_map{${$_[0]}} or not defined $context_map{${$_[0]}}[0]) {
