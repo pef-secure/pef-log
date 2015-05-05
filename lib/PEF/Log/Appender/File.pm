@@ -31,7 +31,6 @@ sub append {
 	utf8::encode($line) if utf8::is_utf8($line);
 	my $fh = $self->{fh};
 	$fh->print($line);
-	$fh->sync();
 }
 
 sub final {
