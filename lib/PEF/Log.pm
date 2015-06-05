@@ -133,7 +133,6 @@ sub popcontext ($) {
 
 sub logswitchstack {
 	return if not @_;
-	my $defctx = $_[1] // $main_context_name;
 	if (@_ == 2 and not defined $_[1]) {
 		my $csn = (ref $_[0]) ? ${$_[0]} : $_[0];
 		if ($$current_stack_nwr eq $csn) {
@@ -143,6 +142,7 @@ sub logswitchstack {
 		delete $context_map{$csn};
 		return;
 	}
+	my $defctx = $_[1] // $main_context_name;
 	if (ref $_[0]) {
 		if ('SCALAR' eq ref $_[0]) {
 			if (not exists $context_map{${$_[0]}} or not defined $context_map{${$_[0]}}[0]) {
