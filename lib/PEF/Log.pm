@@ -88,6 +88,7 @@ sub init {
 
 sub reload {
 	shift @_ if $_[0] eq __PACKAGE__;
+	local $@;
 	PEF::Log::Config::reload(@_);
 }
 
@@ -174,6 +175,7 @@ sub logit {
 	state $lvl_prefix = "PEF::Log::Levels::";
 	my $log_count = 0;
 	for (my $imsg = 0 ; $imsg < @_ ; ++$imsg) {
+		local $@;
 		unshift @_, @error_queue;
 		@error_queue = ();
 		my $msg = $_[$imsg];
