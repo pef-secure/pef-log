@@ -62,6 +62,7 @@ sub import {
 			@streams = @$sl;
 		}
 	}
+	my @streamlevels;
 	if (@streams) {
 		state $sldone = 0;
 		if (!$sldone) {
@@ -70,8 +71,11 @@ sub import {
 			}
 		}
 		$sldone = 1;
+		for my $lvl (@EXPORT) {
+			push @streamlevels, map { "PEF::Log::Levels::${lvl}::$_" } @streams;
+		}
 	}
-	my %imps = map { $_ => undef } @args, @EXPORT;
+	my %imps = map { $_ => undef } @args, @EXPORT, @streamlevels;
 	$class->export_to_level(2, $class, keys %imps);
 }
 
